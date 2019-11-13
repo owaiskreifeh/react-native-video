@@ -28,6 +28,7 @@ class RCTVideoManager extends RCTViewManager {
       .addNumberProp("seek", this.setSeek)
       .addObjectProp("src", this.setSource)
       .addNumberProp("volume", this.setVolume)
+      .addStringProp("drmLicenseUrl", this.setDrmLicenseUrl)
       .addDirectEvent("onVideoEnd")
       .addDirectEvent("onVideoError")
       .addDirectEvent("onVideoLoad")
@@ -45,6 +46,10 @@ class RCTVideoManager extends RCTViewManager {
 
   setControls(view: RCTVideo, value: boolean) {
     view.controls = value;
+  }
+
+  setDrmLicenseUrl(view: RCTVideo, value: string) {
+    view.drmLicenseUrl = value;
   }
 
   setId(view: RCTVideo, value: string) {
