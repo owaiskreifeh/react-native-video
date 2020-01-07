@@ -46,6 +46,7 @@ class VideoEventEmitter {
     private static final String EVENT_AUDIO_BECOMING_NOISY = "onVideoAudioBecomingNoisy";
     private static final String EVENT_AUDIO_FOCUS_CHANGE = "onAudioFocusChanged";
     private static final String EVENT_PLAYBACK_RATE_CHANGE = "onPlaybackRateChange";
+    private static final String EVENT_CUE_POINTS_CHANGE = "onCuePointsChange";
 
     static final String[] Events = {
             EVENT_LOAD_START,
@@ -68,6 +69,7 @@ class VideoEventEmitter {
             EVENT_AUDIO_FOCUS_CHANGE,
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
+            EVENT_CUE_POINTS_CHANGE,
     };
 
     @Retention(RetentionPolicy.SOURCE)
@@ -92,6 +94,7 @@ class VideoEventEmitter {
             EVENT_AUDIO_FOCUS_CHANGE,
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
+            EVENT_CUE_POINTS_CHANGE,
     })
     @interface VideoEvents {
     }
@@ -125,7 +128,9 @@ class VideoEventEmitter {
 
     private static final String EVENT_PROP_TIMED_METADATA = "metadata";
 
-    private static final String EVENT_PROP_BITRATE = "bitrate";   
+    private static final String EVENT_PROP_BITRATE = "bitrate"; 
+
+    private static final String EVENT_PROP_CUE_POINTS = "cuePoints";
 
 
     void setViewId(int viewId) {
@@ -236,6 +241,12 @@ class VideoEventEmitter {
         WritableMap map = Arguments.createMap();
         map.putDouble(EVENT_PROP_PLAYBACK_RATE, (double)rate);
         receiveEvent(EVENT_PLAYBACK_RATE_CHANGE, map);
+    }
+
+    void cuePointsChange(WritableArray cuePoints) {
+        WritableMap event = Arguments.createMap();
+        event.putArray(EVENT_PROP_CUE_POINTS, cuePoints);
+        receiveEvent(EVENT_CUE_POINTS_CHANGE, event);
     }
 
     void timedMetadata(Metadata metadata) {

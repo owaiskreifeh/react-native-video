@@ -10,6 +10,7 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.accessibility.CaptioningManager;
 import android.widget.FrameLayout;
@@ -24,7 +25,10 @@ import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeArray;
 import com.facebook.react.uimanager.ThemedReactContext;
+import com.google.ads.interactivemedia.v3.api.AdsManager;
+import com.google.ads.interactivemedia.v3.api.AdsManagerLoadedEvent;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
@@ -35,6 +39,7 @@ import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.Timeline;
+import com.google.android.exoplayer2.ext.ima.ImaAdsLoader;
 import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer;
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
 import com.google.android.exoplayer2.metadata.Metadata;
@@ -51,6 +56,8 @@ import com.google.android.exoplayer2.source.ProgressiveMediaSource;
 import com.google.android.exoplayer2.source.SingleSampleMediaSource;
 import com.google.android.exoplayer2.source.TrackGroup;
 import com.google.android.exoplayer2.source.TrackGroupArray;
+import com.google.android.exoplayer2.source.ads.AdsLoader;
+import com.google.android.exoplayer2.source.ads.AdsMediaSource;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
@@ -74,6 +81,7 @@ import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -134,6 +142,10 @@ class ReactExoplayerView extends FrameLayout implements
     private String drmLicenseUrl;
 
     private String userAgent;
+
+    //Google Ima ads
+    private ImaAdsLoader imaAdsLoader;
+    private boolean hasAds; 
 
     // Props from React
     private Uri srcUri;
@@ -257,6 +269,9 @@ class ReactExoplayerView extends FrameLayout implements
     public void onHostDestroy() {
         stopPlayback();
         releaseMediaDrm();
+        if(imaAdsLoader != null && hasAds) {
+            imaAdsLoader.release();
+        }
     }
 
     public void cleanUpResources() {
@@ -409,6 +424,9 @@ class ReactExoplayerView extends FrameLayout implements
                     player.addListener(self);
                     player.addMetadataOutput(self);
                     exoPlayerView.setPlayer(player);
+                    if(imaAdsLoader != null) {
+                        imaAdsLoader.setPlayer(player);
+                    }
                     audioBecomingNoisyReceiver.setListener(self);
                     bandwidthMeter.addEventListener(new Handler(), self);
                     setPlayWhenReady(!isPaused);
@@ -422,7 +440,21 @@ class ReactExoplayerView extends FrameLayout implements
                     MediaSource videoSource = buildMediaSource(srcUri, extension);
                     MediaSource mediaSource;
                     if (mediaSourceList.size() == 0) {
-                        mediaSource = videoSource;
+                        if(self.hasAds) {
+                            mediaSource = new AdsMediaSource(videoSource, mediaDataSourceFactory, imaAdsLoader, new AdsLoader.AdViewProvider() {
+                                @Override
+                                public ViewGroup getAdViewGroup() {
+                                    return exoPlayerView;
+                                }
+
+                                @Override
+                                public View[] getAdOverlayViews() {
+                                    return new View[0];
+                                }
+                            });
+                        }else{
+                            mediaSource = videoSource;
+                        }
                     } else {
                         mediaSourceList.add(0, videoSource);
                         MediaSource[] textSourceArray = mediaSourceList.toArray(
@@ -1274,5 +1306,24 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setDrmLicenseUrl(String drmLicenseUrl) {
         this.drmLicenseUrl = drmLicenseUrl;
+    }
+
+    public void setAdsUrl(String adsUrl) {
+        this.hasAds = adsUrl.length() > 0;
+        this.imaAdsLoader = new ImaAdsLoader.Builder(this.getContext())
+                .buildForAdTag(Uri.parse(adsUrl));
+        this.imaAdsLoader.getAdsLoader().addAdsLoadedListener(new com.google.ads.interactivemedia.v3.api.AdsLoader.AdsLoadedListener() {
+            @Override
+            public void onAdsManagerLoaded(AdsManagerLoadedEvent adsManagerLoadedEvent) {
+                AdsManager adsManager = adsManagerLoadedEvent.getAdsManager();
+                List<Float> cuePoints = adsManager.getAdCuePoints();
+                WritableArray writableArrayOfCuePoints = new WritableNativeArray();
+                for( Float cuePoint : cuePoints ){
+                    Log.i("CuePoint", cuePoint + "");
+                    writableArrayOfCuePoints.pushDouble(cuePoint);
+                }
+                eventEmitter.cuePointsChange(writableArrayOfCuePoints);
+            }
+        });
     }
 }

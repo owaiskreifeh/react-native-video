@@ -60,6 +60,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_HIDE_SHUTTER_VIEW = "hideShutterView";
     private static final String PROP_CONTROLS = "controls";
     private static final String PROP_DRM_LICENSE_URL = "drmLicenseUrl";
+    private static final String PROP_ADS_URL = "adsUrl";
 
     private ReactExoplayerConfig config;
 
@@ -277,6 +278,11 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     @ReactProp(name = PROP_DRM_LICENSE_URL)
     public void setDrmLicenseUrl(final ReactExoplayerView videoView, @Nullable String drmLicenseUrl) {
         videoView.setDrmLicenseUrl(drmLicenseUrl);
+    }
+
+    @ReactProp(name = PROP_ADS_URL)
+    public void setAdsUrl(final ReactExoplayerView videoView, @Nullable String adsUrl) {
+        videoView.setAdsUrl(adsUrl);
     }
 
     @ReactProp(name = PROP_BUFFER_CONFIG)
