@@ -47,6 +47,7 @@ class VideoEventEmitter {
     private static final String EVENT_AUDIO_FOCUS_CHANGE = "onAudioFocusChanged";
     private static final String EVENT_PLAYBACK_RATE_CHANGE = "onPlaybackRateChange";
     private static final String EVENT_CUE_POINTS_CHANGE = "onCuePointsChange";
+    private static final String EVENT_VTT_CUE_POINTS_CHANGE = "onVttCuePointsChange";
 
     static final String[] Events = {
             EVENT_LOAD_START,
@@ -131,6 +132,7 @@ class VideoEventEmitter {
     private static final String EVENT_PROP_BITRATE = "bitrate"; 
 
     private static final String EVENT_PROP_CUE_POINTS = "cuePoints";
+    private static final String EVENT_PROP_VTT_CUE_POINTS = "vttCuePoints";
 
 
     void setViewId(int viewId) {
@@ -247,6 +249,12 @@ class VideoEventEmitter {
         WritableMap event = Arguments.createMap();
         event.putArray(EVENT_PROP_CUE_POINTS, cuePoints);
         receiveEvent(EVENT_CUE_POINTS_CHANGE, event);
+    }
+
+    void vttCuePointsChange(WritableArray cuePoints) {
+        WritableMap event = Arguments.createMap();
+        event.putArray(EVENT_PROP_VTT_CUE_POINTS, cuePoints);
+        receiveEvent(EVENT_VTT_CUE_POINTS_CHANGE, event);
     }
 
     void timedMetadata(Metadata metadata) {

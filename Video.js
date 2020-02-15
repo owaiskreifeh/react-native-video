@@ -198,6 +198,12 @@ export default class Video extends Component {
       this.props.onCuePointsChange(event.nativeEvent);
     }
   };
+
+  _onVttCuePointsChange = (event) => {
+    if (this.props.onVttCuePointsChange) {
+      this.props.onVttCuePointsChange(event.nativeEvent);
+    }
+  };
   
   _onExternalPlaybackChange = (event) => {
     if (this.props.onExternalPlaybackChange) {
@@ -306,6 +312,7 @@ export default class Video extends Component {
       onPlaybackResume: this._onPlaybackResume,
       onPlaybackRateChange: this._onPlaybackRateChange,
       onCuePointsChange: this._onCuePointsChange,
+      onVttCuePointsChange: this._onVttCuePointsChange,
       onAudioFocusChanged: this._onAudioFocusChanged,
       onAudioBecomingNoisy: this._onAudioBecomingNoisy,
       onPictureInPictureStatusChanged: this._onPictureInPictureStatusChanged,
@@ -443,6 +450,7 @@ Video.propTypes = {
   disableFocus: PropTypes.bool,
   controls: PropTypes.bool,
   drmLicenseUrl: PropTypes.string,
+  thumbnailsVttUrl: PropTypes.string,
   adsUrl: PropTypes.string,
   audioOnly: PropTypes.bool,
   currentTime: PropTypes.number,
@@ -468,6 +476,7 @@ Video.propTypes = {
   onPlaybackResume: PropTypes.func,
   onPlaybackRateChange: PropTypes.func,
   onCuePointsChange: PropTypes.func,
+  onVttCuePointsChange: PropTypes.func,
   onAudioFocusChanged: PropTypes.func,
   onAudioBecomingNoisy: PropTypes.func,
   onPictureInPictureStatusChanged: PropTypes.func,

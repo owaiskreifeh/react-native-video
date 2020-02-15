@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Message;
 import android.text.TextUtils;
@@ -77,9 +78,13 @@ import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -206,6 +211,83 @@ class ReactExoplayerView extends FrameLayout implements
         audioBecomingNoisyReceiver = new AudioBecomingNoisyReceiver(themedReactContext);
 
         initializePlayer();
+    }
+
+    private class GetUrlContentTask extends AsyncTask<String, Integer, String> {
+        protected List<String> doInBackground(String... urls) {
+            try {
+                URL url = new URL(urls[0]);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                connection.connect();
+                BufferedReader rd = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                ArrayList<String> keys = new ArrayList<>();
+                ArrayList<String> values = new ArrayList<>();
+
+                String content = "", line;
+                while ((line = rd.readLine()) != null) {
+
+                    StringBuilder builder = new StringBuilder();
+
+                    if(line.startsWith("./")){
+                        String image = line.substring(1, line.lastIndexOf("#xywh"));
+                        builder.append("\"image\" : \"" + image + "\"");
+                        builder.append(", ");
+                        String xywh = line.substring(line.lastIndexOf("#xywh=") + 6);
+                        String[] xy = xywh.split(",");
+                        builder.append("\"x\" : " + xy[0] + "");
+                        builder.append(", ");
+                        builder.append("\"y\" : " + xy[1] + "");
+                        String value = builder.toString();
+                        values.add(value);
+                    }else if(line != ""){
+                        if(line.contains("-->")) {
+                            String start = line.substring(0, line.indexOf("-->") - 1);
+                            String end = line.substring(line.indexOf("-->") + 3);
+                            String key = "\"start\" : " + parseDuration(start) + " , \"end\" : " + parseDuration(end) + ", ";
+                            keys.add(key);
+                        }
+                    }
+                }
+
+                List<String> cuePoints = new List<String>();
+                for(int i = 0; i < keys.size(); i++){
+                    StringBuilder resultBuilder = new StringBuilder();
+                    resultBuilder.append("{ ");
+                    resultBuilder.append(keys.get(i));
+                    resultBuilder.append(values.get(i));
+                    resultBuilder.append(" }, ");
+                    cuePoints.add(resultBuilder.toString());
+                }
+                return cuePoints;
+            }catch (Exception e){
+                Log.e(TAG, e.getMessage());
+                return null;
+            }
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+        }
+
+        protected void onPostExecute(List<String> cuePoints) {
+            // this is executed on the main thread after the process is over
+            // update your UI here
+            WritableArray writableArrayOfCuePoints = new WritableNativeArray();
+            for( String cuePoint : cuePoints ){
+                writableArrayOfCuePoints.pushString(cuePoint);
+            }
+            eventEmitter.vttCuePointsChange(writableArrayOfCuePoints);
+        }
+    }
+
+    private int parseDuration(String duration){
+        String[] segments = duration.trim().split(":");
+        int hours = Integer.parseInt(segments[0]);
+        int minutes = Integer.parseInt(segments[1]);
+        int seconds = Integer.parseInt(segments[2]);
+
+        int total = (hours * 60 * 60) + (minutes * 60) + (int)Math.floor(seconds);
+        return total;
     }
 
 
@@ -1325,5 +1407,9 @@ class ReactExoplayerView extends FrameLayout implements
                 eventEmitter.cuePointsChange(writableArrayOfCuePoints);
             }
         });
+    }
+
+    public void setThumbnailsVttUrl(String thumbnailsVttUrl) {
+        new GetUrlContentTask().execute(thumbnailsVttUrl);
     }
 }
