@@ -71,6 +71,7 @@ class VideoEventEmitter {
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
             EVENT_CUE_POINTS_CHANGE,
+            EVENT_VTT_CUE_POINTS_CHANGE,
     };
 
     @Retention(RetentionPolicy.SOURCE)
@@ -96,6 +97,7 @@ class VideoEventEmitter {
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
             EVENT_CUE_POINTS_CHANGE,
+            EVENT_VTT_CUE_POINTS_CHANGE,
     })
     @interface VideoEvents {
     }

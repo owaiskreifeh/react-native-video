@@ -213,7 +213,7 @@ class ReactExoplayerView extends FrameLayout implements
         initializePlayer();
     }
 
-    private class GetUrlContentTask extends AsyncTask<String, Integer, String> {
+    private class GetUrlContentTask extends AsyncTask<String, Integer, List<String>> {
         protected List<String> doInBackground(String... urls) {
             try {
                 URL url = new URL(urls[0]);
@@ -224,7 +224,7 @@ class ReactExoplayerView extends FrameLayout implements
                 ArrayList<String> keys = new ArrayList<>();
                 ArrayList<String> values = new ArrayList<>();
 
-                String content = "", line;
+                String line;
                 while ((line = rd.readLine()) != null) {
 
                     StringBuilder builder = new StringBuilder();
@@ -250,13 +250,13 @@ class ReactExoplayerView extends FrameLayout implements
                     }
                 }
 
-                List<String> cuePoints = new List<String>();
+                List<String> cuePoints = new ArrayList<>();
                 for(int i = 0; i < keys.size(); i++){
                     StringBuilder resultBuilder = new StringBuilder();
                     resultBuilder.append("{ ");
                     resultBuilder.append(keys.get(i));
                     resultBuilder.append(values.get(i));
-                    resultBuilder.append(" }, ");
+                    resultBuilder.append(" }");
                     cuePoints.add(resultBuilder.toString());
                 }
                 return cuePoints;
@@ -284,9 +284,9 @@ class ReactExoplayerView extends FrameLayout implements
         String[] segments = duration.trim().split(":");
         int hours = Integer.parseInt(segments[0]);
         int minutes = Integer.parseInt(segments[1]);
-        int seconds = Integer.parseInt(segments[2]);
+        int seconds = (int)Math.floor(Float.parseFloat(segments[2]));
 
-        int total = (hours * 60 * 60) + (minutes * 60) + (int)Math.floor(seconds);
+        int total = (hours * 60 * 60) + (minutes * 60) + seconds;
         return total;
     }
 
