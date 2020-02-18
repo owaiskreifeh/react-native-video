@@ -77,6 +77,9 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+import com.npaw.youbora.lib6.exoplayer2.Exoplayer2Adapter;
+import com.npaw.youbora.lib6.plugin.Options;
+import com.npaw.youbora.lib6.plugin.Plugin;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -150,7 +153,10 @@ class ReactExoplayerView extends FrameLayout implements
 
     //Google Ima ads
     private ImaAdsLoader imaAdsLoader;
-    private boolean hasAds; 
+    private boolean hasAds;
+
+    // Youbora Integration
+    private Plugin youboraPlugin;
 
     // Props from React
     private Uri srcUri;
@@ -509,6 +515,12 @@ class ReactExoplayerView extends FrameLayout implements
                     if(imaAdsLoader != null) {
                         imaAdsLoader.setPlayer(player);
                     }
+                    // Once the player is created, attach the Youbora Adapter to the plugin
+                    if (youboraPlugin != null) {
+                        Exoplayer2Adapter adapter = new Exoplayer2Adapter(player);
+                        adapter.setCustomEventLogger(trackSelector);
+                        youboraPlugin.setAdapter(adapter);
+                    }
                     audioBecomingNoisyReceiver.setListener(self);
                     bandwidthMeter.addEventListener(new Handler(), self);
                     setPlayWhenReady(!isPaused);
@@ -639,6 +651,10 @@ class ReactExoplayerView extends FrameLayout implements
         themedReactContext.removeLifecycleEventListener(this);
         audioBecomingNoisyReceiver.removeListener();
         bandwidthMeter.removeEventListener(this);
+
+        if (youboraPlugin != null) {
+            youboraPlugin.removeAdapter();
+        }
     }
 
     private boolean requestAudioFocus() {
@@ -1411,5 +1427,14 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setThumbnailsVttUrl(String thumbnailsVttUrl) {
         new GetUrlContentTask().execute(thumbnailsVttUrl);
+    }
+
+    public void setYouboraParams(Options youboraOptions) {
+        this.youboraPlugin = new Plugin(youboraOptions, this.getContext());
+        if (player != null && trackSelector != null) {
+            Exoplayer2Adapter adapter = new Exoplayer2Adapter(player);
+            adapter.setCustomEventLogger(trackSelector);
+            youboraPlugin.setAdapter(adapter);
+        }
     }
 }

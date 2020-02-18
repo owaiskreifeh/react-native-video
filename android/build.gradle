@@ -30,6 +30,9 @@ dependencies {
     //Google IMA ads
     implementation 'com.google.android.exoplayer:extension-ima:2.10.4'
 
+    // Youbora dependencies
+    implementation 'com.npaw.youbora.adapters:exoplayer2-adapter:6.4.1'
+
     // All support libs must use the same version
     implementation "androidx.annotation:annotation:1.1.0"
     implementation "androidx.core:core:1.1.0"
