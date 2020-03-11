@@ -267,7 +267,7 @@ class ReactExoplayerView extends FrameLayout implements
                 }
                 return cuePoints;
             }catch (Exception e){
-                Log.e(TAG, e.getMessage());
+                // Log.e(TAG, e.getMessage());
                 return null;
             }
         }
@@ -487,7 +487,7 @@ class ReactExoplayerView extends FrameLayout implements
                     try {
                         drmSessionManager = buildDrmSessionManagerV18(drmLicenseUrl);
                     } catch (UnsupportedDrmException e) {
-                        Log.d(TAG, "Unsupported drm exception");
+                        // Log.d(TAG, "Unsupported drm exception");
                         drmSessionManager = null;
                     }
 
@@ -830,7 +830,7 @@ class ReactExoplayerView extends FrameLayout implements
                 text += "unknown";
                 break;
         }
-        Log.d(TAG, text);
+        // Log.d(TAG, text);
     }
 
     private void startProgressHandler() {
@@ -1417,7 +1417,7 @@ class ReactExoplayerView extends FrameLayout implements
                 List<Float> cuePoints = adsManager.getAdCuePoints();
                 WritableArray writableArrayOfCuePoints = new WritableNativeArray();
                 for( Float cuePoint : cuePoints ){
-                    Log.i("CuePoint", cuePoint + "");
+                    // Log.i("CuePoint", cuePoint + "");
                     writableArrayOfCuePoints.pushDouble(cuePoint);
                 }
                 eventEmitter.cuePointsChange(writableArrayOfCuePoints);
