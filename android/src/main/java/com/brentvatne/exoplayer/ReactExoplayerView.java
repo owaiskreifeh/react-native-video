@@ -278,11 +278,13 @@ class ReactExoplayerView extends FrameLayout implements
         protected void onPostExecute(List<String> cuePoints) {
             // this is executed on the main thread after the process is over
             // update your UI here
-            WritableArray writableArrayOfCuePoints = new WritableNativeArray();
-            for( String cuePoint : cuePoints ){
-                writableArrayOfCuePoints.pushString(cuePoint);
+            if(cuePoints != null){
+                WritableArray writableArrayOfCuePoints = new WritableNativeArray();
+                for( String cuePoint : cuePoints ){
+                    writableArrayOfCuePoints.pushString(cuePoint);
+                }
+                eventEmitter.vttCuePointsChange(writableArrayOfCuePoints);
             }
-            eventEmitter.vttCuePointsChange(writableArrayOfCuePoints);
         }
     }
 
