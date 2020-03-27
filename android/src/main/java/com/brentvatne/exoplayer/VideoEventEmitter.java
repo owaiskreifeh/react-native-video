@@ -179,9 +179,9 @@ class VideoEventEmitter {
 
     void progressChanged(double currentPosition, double bufferedDuration, double seekableDuration) {
         WritableMap event = Arguments.createMap();
-        event.putDouble(EVENT_PROP_CURRENT_TIME, currentPosition / 1000D);
-        event.putDouble(EVENT_PROP_PLAYABLE_DURATION, bufferedDuration / 1000D);
-        event.putDouble(EVENT_PROP_SEEKABLE_DURATION, seekableDuration / 1000D);
+        event.putDouble(EVENT_PROP_CURRENT_TIME, currentPosition);
+        event.putDouble(EVENT_PROP_PLAYABLE_DURATION, bufferedDuration);
+        event.putDouble(EVENT_PROP_SEEKABLE_DURATION, seekableDuration);
         receiveEvent(EVENT_PROGRESS, event);
     }
 

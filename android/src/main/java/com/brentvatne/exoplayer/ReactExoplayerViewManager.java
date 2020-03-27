@@ -63,7 +63,6 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_HIDE_SHUTTER_VIEW = "hideShutterView";
     private static final String PROP_CONTROLS = "controls";
     private static final String PROP_DRM_LICENSE_URL = "drmLicenseUrl";
-    private static final String PROP_ADS_URL = "adsUrl";
     private static final String PROP_THUMBNAILS_VTT_URL = "thumbnailsVttUrl";
     private static final String PROP_YOUBORA_PARAMS = "youboraParams";
 
@@ -143,23 +142,24 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
 
     @ReactProp(name = PROP_SRC)
     public void setSrc(final ReactExoplayerView videoView, @Nullable ReadableMap src) {
-        Context context = videoView.getContext().getApplicationContext();
         String uriString = src.hasKey(PROP_SRC_URI) ? src.getString(PROP_SRC_URI) : null;
         String extension = src.hasKey(PROP_SRC_TYPE) ? src.getString(PROP_SRC_TYPE) : null;
-        Map<String, String> headers = src.hasKey(PROP_SRC_HEADERS) ? toStringMap(src.getMap(PROP_SRC_HEADERS)) : null;
-
 
         if (TextUtils.isEmpty(uriString)) {
             return;
         }
 
         if (startsWithValidScheme(uriString)) {
+            Map<String, String> headers = src.hasKey(PROP_SRC_HEADERS) ? toStringMap(src.getMap(PROP_SRC_HEADERS)) : null;
+            String adsId = src.hasKey("adsId") ? src.getString("adsId") : null;
             Uri srcUri = Uri.parse(uriString);
 
             if (srcUri != null) {
-                videoView.setSrc(srcUri, extension, headers);
+                videoView.setSrc(srcUri, extension, headers, adsId);
             }
         } else {
+            Context context = videoView.getContext().getApplicationContext();
+            
             int identifier = context.getResources().getIdentifier(
                 uriString,
                 "drawable",
@@ -394,11 +394,6 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     @ReactProp(name = PROP_THUMBNAILS_VTT_URL)
     public void setThumbnailsVttUrl(final ReactExoplayerView videoView, @Nullable String thumbnailsVttUrl) {
         videoView.setThumbnailsVttUrl(thumbnailsVttUrl);
-    }
-
-    @ReactProp(name = PROP_ADS_URL)
-    public void setAdsUrl(final ReactExoplayerView videoView, @Nullable String adsUrl) {
-        videoView.setAdsUrl(adsUrl);
     }
 
     @ReactProp(name = PROP_BUFFER_CONFIG)

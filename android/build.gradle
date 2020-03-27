@@ -23,12 +23,11 @@ android {
 
 dependencies {
     implementation "com.facebook.react:react-native:${safeExtGet('reactNativeVersion', '+')}"
-    implementation('com.google.android.exoplayer:exoplayer:2.10.4') {
-        exclude group: 'com.android.support'
-    }
-
-    //Google IMA ads
-    implementation 'com.google.android.exoplayer:extension-ima:2.10.4'
+    implementation 'com.google.android.exoplayer:exoplayer:2.10.4'
+    // implementation('com.google.android.exoplayer:exoplayer:2.10.4') {
+    //     exclude group: 'com.android.support'
+    // }
+    implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.18.0'
 
     // Youbora dependencies
     implementation 'com.npaw.youbora.adapters:exoplayer2-adapter:6.4.1'
