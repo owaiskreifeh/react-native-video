@@ -679,8 +679,13 @@ class ReactExoplayerView extends FrameLayout implements
             if (hasAudioFocus) {
                 player.setPlayWhenReady(true);
             }
+
+            if (!disableFocus) {
+                setKeepScreenOn(true);
+            }
         } else {
             player.setPlayWhenReady(false);
+            setKeepScreenOn(false);
         }
     }
 
@@ -704,9 +709,6 @@ class ReactExoplayerView extends FrameLayout implements
         } else {
             initializePlayer();
         }
-        if (!disableFocus) {
-            setKeepScreenOn(true);
-        }
     }
 
     private void pausePlayback() {
@@ -715,7 +717,6 @@ class ReactExoplayerView extends FrameLayout implements
                 setPlayWhenReady(false);
             }
         }
-        setKeepScreenOn(false);
     }
 
     private void stopPlayback() {
