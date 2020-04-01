@@ -174,9 +174,9 @@ export default class Video extends Component {
     }
   };
 
-  _onCuePointsChange = (event) => {
-    if (this.props.onCuePointsChange) {
-      this.props.onCuePointsChange(event.nativeEvent);
+  _onAdEvent = (event) => {
+    if (this.props.onAdEvent) {
+      this.props.onAdEvent(event.nativeEvent);
     }
   };
 
@@ -292,7 +292,7 @@ export default class Video extends Component {
       onPlaybackStalled: this._onPlaybackStalled,
       onPlaybackResume: this._onPlaybackResume,
       onPlaybackRateChange: this._onPlaybackRateChange,
-      onCuePointsChange: this._onCuePointsChange,
+      onAdEvent: this._onAdEvent,
       onVttCuePointsChange: this._onVttCuePointsChange,
       onAudioFocusChanged: this._onAudioFocusChanged,
       onAudioBecomingNoisy: this._onAudioBecomingNoisy,
