@@ -46,7 +46,7 @@ class VideoEventEmitter {
     private static final String EVENT_AUDIO_BECOMING_NOISY = "onVideoAudioBecomingNoisy";
     private static final String EVENT_AUDIO_FOCUS_CHANGE = "onAudioFocusChanged";
     private static final String EVENT_PLAYBACK_RATE_CHANGE = "onPlaybackRateChange";
-    private static final String EVENT_CUE_POINTS_CHANGE = "onCuePointsChange";
+    private static final String EVENT_AD_EVENT = "onAdEvent";
     private static final String EVENT_VTT_CUE_POINTS_CHANGE = "onVttCuePointsChange";
 
     static final String[] Events = {
@@ -70,7 +70,7 @@ class VideoEventEmitter {
             EVENT_AUDIO_FOCUS_CHANGE,
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
-            EVENT_CUE_POINTS_CHANGE,
+            EVENT_AD_EVENT,
             EVENT_VTT_CUE_POINTS_CHANGE,
     };
 
@@ -96,7 +96,7 @@ class VideoEventEmitter {
             EVENT_AUDIO_FOCUS_CHANGE,
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
-            EVENT_CUE_POINTS_CHANGE,
+            EVENT_AD_EVENT,
             EVENT_VTT_CUE_POINTS_CHANGE,
     })
     @interface VideoEvents {
@@ -133,7 +133,6 @@ class VideoEventEmitter {
 
     private static final String EVENT_PROP_BITRATE = "bitrate"; 
 
-    private static final String EVENT_PROP_CUE_POINTS = "cuePoints";
     private static final String EVENT_PROP_VTT_CUE_POINTS = "vttCuePoints";
 
 
@@ -179,9 +178,9 @@ class VideoEventEmitter {
 
     void progressChanged(double currentPosition, double bufferedDuration, double seekableDuration) {
         WritableMap event = Arguments.createMap();
-        event.putDouble(EVENT_PROP_CURRENT_TIME, currentPosition / 1000D);
-        event.putDouble(EVENT_PROP_PLAYABLE_DURATION, bufferedDuration / 1000D);
-        event.putDouble(EVENT_PROP_SEEKABLE_DURATION, seekableDuration / 1000D);
+        event.putDouble(EVENT_PROP_CURRENT_TIME, currentPosition);
+        event.putDouble(EVENT_PROP_PLAYABLE_DURATION, bufferedDuration);
+        event.putDouble(EVENT_PROP_SEEKABLE_DURATION, seekableDuration);
         receiveEvent(EVENT_PROGRESS, event);
     }
 
@@ -247,10 +246,11 @@ class VideoEventEmitter {
         receiveEvent(EVENT_PLAYBACK_RATE_CHANGE, map);
     }
 
-    void cuePointsChange(WritableArray cuePoints) {
+    public void adEvent(String type, WritableMap data) {
         WritableMap event = Arguments.createMap();
-        event.putArray(EVENT_PROP_CUE_POINTS, cuePoints);
-        receiveEvent(EVENT_CUE_POINTS_CHANGE, event);
+        event.putString("type", type);
+        event.putMap("data", data);
+        receiveEvent(EVENT_AD_EVENT, event);
     }
 
     void vttCuePointsChange(WritableArray cuePoints) {

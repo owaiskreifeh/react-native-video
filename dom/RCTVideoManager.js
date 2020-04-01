@@ -30,7 +30,6 @@ class RCTVideoManager extends RCTViewManager {
       .addNumberProp("volume", this.setVolume)
       .addStringProp("drmLicenseUrl", this.setDrmLicenseUrl)
       .addStringProp("thumbnailsVttUrl", this.setThumbnailsVttUrl)
-      .addStringProp("adsUrl", this.setAdsUrl)
       .addObjectProp("youboraParams", this.setYouboraParams)
       .addDirectEvent("onVideoEnd")
       .addDirectEvent("onVideoError")
@@ -57,10 +56,6 @@ class RCTVideoManager extends RCTViewManager {
 
   setThumbnailsVttUrl(view: RCTVideo, value: string) {
     view.thumbnailsVttUrl = value;
-  }
-
-  setAdsUrl(view: RCTVideo, value: string) {
-    view.adsUrl = value;
   }
 
   setId(view: RCTVideo, value: string) {
