@@ -11,7 +11,7 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
+//import android.view.ViewGroup;
 import android.view.Window;
 import android.view.accessibility.CaptioningManager;
 import android.widget.FrameLayout;
@@ -102,14 +102,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 
 @SuppressLint("ViewConstructor")
 class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, Player.EventListener,
         BandwidthMeter.EventListener, BecomingNoisyListener, AudioManager.OnAudioFocusChangeListener, MetadataOutput,
         AdEvent.AdEventListener, AdErrorEvent.AdErrorListener, AdsLoader.AdsLoadedListener {
 
-    private static final String TAG = "ReactExoplayerView";
+//    private static final String TAG = "ReactExoplayerView";
 
     private static final CookieManager DEFAULT_COOKIE_MANAGER;
     private static final int SHOW_PROGRESS = 1;
@@ -122,8 +121,8 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
     private final VideoEventEmitter eventEmitter;
     private final ReactExoplayerConfig config;
     private final DefaultBandwidthMeter bandwidthMeter;
-    private View playPauseControlContainer;
-    private Player.EventListener eventListener;
+//    private View playPauseControlContainer;
+//    private Player.EventListener eventListener;
 
     private ExoPlayerView exoPlayerView;
 
@@ -194,6 +193,7 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
     private final AudioManager audioManager;
     private final AudioBecomingNoisyReceiver audioBecomingNoisyReceiver;
 
+    @SuppressLint("HandlerLeak")
     private final Handler progressHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -476,13 +476,13 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
             case C.TYPE_SS:
                 return new SsMediaSource.Factory(new DefaultSsChunkSource.Factory(mediaDataSourceFactory),
                         buildDataSourceFactory(false))
-                                .setLoadErrorHandlingPolicy(config.buildLoadErrorHandlingPolicy(minLoadRetryCount))
-                                .createMediaSource(uri);
+                        .setLoadErrorHandlingPolicy(config.buildLoadErrorHandlingPolicy(minLoadRetryCount))
+                        .createMediaSource(uri);
             case C.TYPE_DASH:
                 return new DashMediaSource.Factory(new DefaultDashChunkSource.Factory(mediaDataSourceFactory),
                         buildDataSourceFactory(false))
-                                .setLoadErrorHandlingPolicy(config.buildLoadErrorHandlingPolicy(minLoadRetryCount))
-                                .createMediaSource(uri);
+                        .setLoadErrorHandlingPolicy(config.buildLoadErrorHandlingPolicy(minLoadRetryCount))
+                        .createMediaSource(uri);
             case C.TYPE_HLS:
                 return new HlsMediaSource.Factory(mediaDataSourceFactory)
                         .setLoadErrorHandlingPolicy(config.buildLoadErrorHandlingPolicy(minLoadRetryCount))
@@ -530,7 +530,7 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
             trackSelector = null;
             player = null;
         }
-        progressHandler.removeMessages(SHOW_PROGRESS);
+        clearProgressMessageHandler();
         themedReactContext.removeLifecycleEventListener(this);
         audioBecomingNoisyReceiver.removeListener();
         bandwidthMeter.removeEventListener(this);
@@ -964,21 +964,26 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
     }
 
     public void seekTo(long positionMs) {
-        if (player != null && !adsPlaying) {
+        if (player != null) {
             double seconds = positionMs / 1000.0;
 
-            if (mStreamManager != null) {
+            if (adsPlaying) {
                 seconds = mStreamManager.getStreamTimeForContentTime(seconds);
-                CuePoint cuePoint = mStreamManager.getPreviousCuePointForStreamTime(seconds);
-                if (cuePoint != null && !cuePoint.isPlayed()) {
-                    mSnapBackTime = (long) seconds;
-                    // Missed cue point, so snap back to the beginning of cue point.
-                    seconds = cuePoint.getStartTime();
+                mSnapBackTime = (long) seconds;
+            } else {
+                if (mStreamManager != null) {
+                    seconds = mStreamManager.getStreamTimeForContentTime(seconds);
+                    CuePoint cuePoint = mStreamManager.getPreviousCuePointForStreamTime(seconds);
+                    if (cuePoint != null && !cuePoint.isPlayed()) {
+                        mSnapBackTime = (long) seconds;
+                        // Missed cue point, so snap back to the beginning of cue point.
+                        seconds = cuePoint.getStartTime();
+                    }
                 }
-            }
 
-            this.seekTime = (long) seconds * 1000;
-            player.seekTo(seekTime);
+                this.seekTime = (long) seconds * 1000;
+                player.seekTo(seekTime);
+            }
         }
     }
 
@@ -1092,7 +1097,9 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
         }
     }
 
-    /** AdErrorListener implementation */
+    /**
+     * AdErrorListener implementation
+     */
     @Override
     public void onAdError(AdErrorEvent event) {
         // log(String.format("Error: %s\n", event.getError().getMessage()));
@@ -1138,30 +1145,26 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
         }
     }
 
-    /** AdEventListener implementation */
+    /**
+     * AdEventListener implementation
+     */
     @Override
     public void onAdEvent(AdEvent event) {
         switch (event.getType()) {
-            // case AD_PROGRESS: Log.d("saffar","AD_PROGRESS "); break;
-            case AD_BREAK_STARTED:
-                Log.d("saffar", "AD_BREAK_STARTED ");
-                break;
-            case AD_BREAK_ENDED:
-                Log.d("saffar", "AD_BREAK_ENDED");
-                break;
-            // case AD_PERIOD_STARTED:
-            // Log.d("saffar", "AD_PERIOD_STARTED ");
-            // break;
-            // case AD_PERIOD_ENDED:
-            // Log.d("saffar", "AD_PERIOD_ENDED");
-            // break;
+            // case AD_PROGRESS:  break;
+            //case AD_BREAK_STARTED: break;
+            //case AD_BREAK_ENDED:  break;
+            // case AD_PERIOD_STARTED: break;
+            // case AD_PERIOD_ENDED: break;
             case CUEPOINTS_CHANGED:
                 setImaCuePoints();
                 break;
         }
     }
 
-    /** AdsLoadedListener implementation */
+    /**
+     * AdsLoadedListener implementation
+     */
     @Override
     public void onAdsManagerLoaded(AdsManagerLoadedEvent event) {
         if (this.mStreamManager == null) {
@@ -1253,7 +1256,7 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
 
         TrackGroupArray groups = info.getTrackGroups(rendererIndex);
         int groupIndex = C.INDEX_UNSET;
-        int[] tracks = { 0 };
+        int[] tracks = {0};
 
         if (TextUtils.isEmpty(type)) {
             type = "default";
@@ -1446,7 +1449,7 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
     }
 
     public void setBufferConfig(int newMinBufferMs, int newMaxBufferMs, int newBufferForPlaybackMs,
-            int newBufferForPlaybackAfterRebufferMs) {
+                                int newBufferForPlaybackAfterRebufferMs) {
         minBufferMs = newMinBufferMs;
         maxBufferMs = newMaxBufferMs;
         bufferForPlaybackMs = newBufferForPlaybackMs;
