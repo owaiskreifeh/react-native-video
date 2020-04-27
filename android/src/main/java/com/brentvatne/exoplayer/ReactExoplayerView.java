@@ -326,16 +326,7 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
     public void onHostDestroy() {
         stopPlayback();
         releaseMediaDrm();
-
-        if (mStreamManager != null) {
-            mStreamManager.destroy();
-            mStreamManager = null;
-        }
-
-        if (mDisplayContainer != null) {
-            mDisplayContainer.destroy();
-            mDisplayContainer = null;
-        }
+        releaseAds();
     }
 
     public void cleanUpResources() {
@@ -537,6 +528,28 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
 
         if (youboraPlugin != null) {
             youboraPlugin.removeAdapter();
+        }
+
+        releaseAds();
+    }
+
+    private void releaseAds() {
+        if (mAdsLoader != null) {
+            mAdsLoader.removeAdErrorListener(this);
+            mAdsLoader.removeAdsLoadedListener(this);
+            this.mAdsLoader = null;
+        }
+
+        if (mStreamManager != null) {
+            mStreamManager.removeAdErrorListener(this);
+            mStreamManager.removeAdEventListener(this);
+            mStreamManager.destroy();
+            this.mStreamManager = null;
+        }
+
+        if (mDisplayContainer != null) {
+            mDisplayContainer.destroy();
+            this.mDisplayContainer = null;
         }
     }
 
@@ -1103,9 +1116,11 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
     @Override
     public void onAdError(AdErrorEvent event) {
         // log(String.format("Error: %s\n", event.getError().getMessage()));
-        loadSource(srcUri, extension);
-        eventEmitter.loadStart();
-        loadVideoStarted = true;
+        if (!loadVideoStarted && player != null) {
+            loadSource(srcUri, extension);
+            eventEmitter.loadStart();
+            loadVideoStarted = true;
+        }
     }
 
     private void setImaCuePoints() {
