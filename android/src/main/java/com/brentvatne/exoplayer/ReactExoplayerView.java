@@ -954,7 +954,9 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
 
     private void reloadSource() {
         playerNeedsSource = true;
-        initializePlayer();
+        if (player != null) {
+            initializePlayer();
+        }
     }
 
     private int getGroupIndexForDefaultLocale(TrackGroupArray groups) {
@@ -1017,9 +1019,11 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
         return new VideoStreamPlayer() {
             @Override
             public void loadUrl(String url, List<HashMap<String, String>> subtitles) {
-                loadSource(Uri.parse(url), null);
-                eventEmitter.loadStart();
-                loadVideoStarted = true;
+                if (player != null) {
+                    loadSource(Uri.parse(url), null);
+                    eventEmitter.loadStart();
+                    loadVideoStarted = true;
+                }
             }
 
             @Override
