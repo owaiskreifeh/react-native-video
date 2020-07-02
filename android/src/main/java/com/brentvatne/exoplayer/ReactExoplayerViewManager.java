@@ -88,6 +88,12 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_YOUBORA_CONTENT_STREAMING_PROTOCOL = "contentStreamingProtocol";
     private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_1 = "contentCustomDimension1";
     private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_2 = "contentCustomDimension2";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_3 = "contentCustomDimension3";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_4 = "contentCustomDimension4";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_5 = "contentCustomDimension5";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_6 = "contentCustomDimension6";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_7 = "contentCustomDimension7";
+    private static final String PROP_YOUBORA_RENDITION= "rendition";
     private static final String PROP_YOUBORA_USER_TYPE = "userType";
 
     private static final String PROP_YOUBORA_CONTENT_METADATA = "contentMetadata";
@@ -205,6 +211,12 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         String contentStreamingProtocol = src.hasKey(PROP_YOUBORA_CONTENT_STREAMING_PROTOCOL) ? src.getString(PROP_YOUBORA_CONTENT_STREAMING_PROTOCOL) : null;
         String contentCustomDimension1 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_1) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_1) : null;
         String contentCustomDimension2 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_2) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_2) : null;
+        String contentCustomDimension3 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_3) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_3) : null;
+        String contentCustomDimension4 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_4) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_4) : null;
+        String contentCustomDimension5 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_5) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_5) : null;
+        String contentCustomDimension6 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_6) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_6) : null;
+        String contentCustomDimension7 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_6) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_7) : null;
+        String rendition = src.hasKey(PROP_YOUBORA_RENDITION) ? src.getString(PROP_YOUBORA_RENDITION) : null;
         String userType = src.hasKey(PROP_YOUBORA_USER_TYPE) ? src.getString(PROP_YOUBORA_USER_TYPE) : null;
         Map<String, String> contentMetadata = src.hasKey(PROP_YOUBORA_CONTENT_METADATA) ? toStringMap(src.getMap(PROP_YOUBORA_CONTENT_METADATA)) : null;
 
@@ -226,6 +238,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         youboraOptions.setContentIsLive(isLive); // VOD or Live
         youboraOptions.setParseCdnNode(parseCdnNode);   // Allow Youbora to parse CDN from Host
         youboraOptions.setEnabled(enabled);
+        youboraOptions.setContentRendition(rendition);
 
         youboraOptions.setContentTitle(title);  // Content Title
         youboraOptions.setProgram(program);  // Content Title 2
@@ -243,9 +256,15 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         youboraOptions.setContentChannel(contentChannels);
 
         youboraOptions.setContentStreamingProtocol(contentStreamingProtocol); // HLS, widevine or widevine dash
-        youboraOptions.setContentCustomDimension2(contentCustomDimension2); // HLS, widevine or widevine dash
 
         youboraOptions.setContentCustomDimension1(contentCustomDimension1);
+        youboraOptions.setContentCustomDimension2(contentCustomDimension2);
+        youboraOptions.setContentCustomDimension3(contentCustomDimension3);
+        youboraOptions.setContentCustomDimension4(contentCustomDimension4);
+        youboraOptions.setContentCustomDimension5(contentCustomDimension5);
+        youboraOptions.setContentCustomDimension6(contentCustomDimension6);
+        youboraOptions.setContentCustomDimension7(contentCustomDimension7);
+
         youboraOptions.setUserType(userType);
 
         youboraOptions.setContentMetadata(metadataBundle);
