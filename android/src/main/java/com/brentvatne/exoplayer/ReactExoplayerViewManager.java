@@ -188,7 +188,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         }
     }
 
-    @ReactProp(name = PROP_LANGUAGE, defaultString = "ar")
+    @ReactProp(name = PROP_LANGUAGE)
     public void setLanguageParams(final ReactExoplayerView videoView, @Nullable String lang){
         videoView.setLanguage(lang);
     }
