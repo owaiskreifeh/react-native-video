@@ -168,6 +168,7 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
     private long mSnapBackTime = C.TIME_UNSET;
     private CuePoint[] playedAds;
     private boolean adsPlaying = false;
+    private String language = "ar";
 
     // Props from React
     private Uri srcUri;
@@ -264,6 +265,9 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
         // VOD HLS request.
         String[] ids = adsId.split("_,_");
         StreamRequest request = mSdkFactory.createVodStreamRequest(ids[0], ids[1], null);
+        Map adTagParameters = new HashMap();
+        adTagParameters.put("cust_params", "shahid_localization=" + this.language);
+        request.setAdTagParameters(adTagParameters);
         request.setFormat(StreamFormat.HLS);
         return request;
     }
@@ -1369,6 +1373,10 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
         textTrackType = type;
         textTrackValue = value;
         setSelectedTrack(C.TRACK_TYPE_TEXT, textTrackType, textTrackValue);
+    }
+
+    public void setLanguage(String lang) {
+        this.language = lang;
     }
 
     public void setPausedModifier(boolean paused) {

@@ -65,6 +65,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_DRM_LICENSE_URL = "drmLicenseUrl";
     private static final String PROP_THUMBNAILS_VTT_URL = "thumbnailsVttUrl";
     private static final String PROP_YOUBORA_PARAMS = "youboraParams";
+    private static final String PROP_LANGUAGE = "language";
 
     private static final String PROP_YOUBORA_ACCOUNT_CODE = "accountCode";
     private static final String PROP_YOUBORA_USERNAME = "username";
@@ -179,6 +180,11 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
                 }
             }
         }
+    }
+
+    @ReactProp(name = PROP_LANGUAGE, defaultString = "ar")
+    public void setLanguageParams(final ReactExoplayerView videoView, @Nullable String lang){
+        videoView.setLanguage(lang);
     }
 
     @ReactProp(name = PROP_YOUBORA_PARAMS)

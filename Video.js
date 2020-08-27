@@ -426,6 +426,8 @@ Video.propTypes = {
   controls: PropTypes.bool,
   drmLicenseUrl: PropTypes.string,
   thumbnailsVttUrl: PropTypes.string,
+  youboraParams: PropTypes.object,
+  language: PropTypes.string,
   audioOnly: PropTypes.bool,
   currentTime: PropTypes.number,
   fullscreenAutorotate: PropTypes.bool,
