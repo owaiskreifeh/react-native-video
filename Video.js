@@ -428,6 +428,7 @@ Video.propTypes = {
   thumbnailsVttUrl: PropTypes.string,
   youboraParams: PropTypes.object,
   language: PropTypes.string,
+  killLastInstance: PropTypes.bool,
   audioOnly: PropTypes.bool,
   currentTime: PropTypes.number,
   fullscreenAutorotate: PropTypes.bool,

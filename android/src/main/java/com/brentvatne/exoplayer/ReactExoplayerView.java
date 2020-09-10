@@ -113,6 +113,10 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
     private static final CookieManager DEFAULT_COOKIE_MANAGER;
     private static final int SHOW_PROGRESS = 1;
 
+    private static SimpleExoPlayer lastPlayerinstance;
+    private static ExoPlayerView lastExoPlayerView;
+    private boolean killLastInstance;
+
     static {
         DEFAULT_COOKIE_MANAGER = new CookieManager();
         DEFAULT_COOKIE_MANAGER.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
@@ -246,6 +250,7 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
 
     public ReactExoplayerView(ThemedReactContext context, ReactExoplayerConfig config) {
         super(context);
+
         this.themedReactContext = context;
         this.eventEmitter = new VideoEventEmitter(context);
         this.config = config;
@@ -405,8 +410,16 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
                             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF);
                     // TODO: Add drmSessionManager to 5th param from:
                     // https://github.com/react-native-community/react-native-video/pull/1445
+
+                    if (killLastInstance && lastPlayerinstance != null){
+                        lastPlayerinstance.release();
+                        lastExoPlayerView.removeAllViews();
+                    }
+
                     player = ExoPlayerFactory.newSimpleInstance(getContext(), renderersFactory, trackSelector,
                             defaultLoadControl, drmSessionManager, bandwidthMeter);
+                    lastPlayerinstance = player;
+                    lastExoPlayerView = exoPlayerView;
                     player.addListener(self);
                     player.addMetadataOutput(self);
                     exoPlayerView.setPlayer(player);
@@ -1378,6 +1391,8 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
     public void setLanguage(String lang) {
         this.language = lang;
     }
+
+    public void setKillLastInstance(boolean kill) {this.killLastInstance = kill;}
 
     public void setPausedModifier(boolean paused) {
         isPaused = paused;
