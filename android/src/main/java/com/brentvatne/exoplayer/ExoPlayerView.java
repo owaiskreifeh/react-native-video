@@ -5,6 +5,7 @@ import android.content.Context;
 import androidx.core.content.ContextCompat;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.SurfaceView;
 import android.view.TextureView;
@@ -82,6 +83,14 @@ public final class ExoPlayerView extends FrameLayout {
         layout.addView(subtitleLayout, 2, layoutParams);
 
         addViewInLayout(layout, 0, aspectRatioParams);
+    }
+
+    public void setFontSizeTrack(int fontSizeTrack) {
+        subtitleLayout.setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, fontSizeTrack );
+    }
+
+    public void setPaddingBottomTrack(float paddingBottomTrack) {
+        subtitleLayout.setBottomPaddingFraction(paddingBottomTrack);
     }
 
     private void setVideoView() {
