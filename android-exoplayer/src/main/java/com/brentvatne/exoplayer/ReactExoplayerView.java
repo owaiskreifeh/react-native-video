@@ -845,6 +845,7 @@ class ReactExoplayerView extends FrameLayout implements
             WritableMap audioTrack = Arguments.createMap();
             audioTrack.putInt("index", i);
             audioTrack.putString("title", format.id != null ? format.id : "");
+            audioTrack.putString("label", format.label != null ? format.label : "");
             audioTrack.putString("type", format.sampleMimeType);
             audioTrack.putString("language", format.language != null ? format.language : "");
             audioTrack.putString("bitrate", format.bitrate == Format.NO_VALUE ? ""
@@ -892,13 +893,14 @@ class ReactExoplayerView extends FrameLayout implements
 
         TrackGroupArray groups = info.getTrackGroups(index);
         for (int i = 0; i < groups.length; ++i) {
-             Format format = groups.get(i).getFormat(0);
-             WritableMap textTrack = Arguments.createMap();
-             textTrack.putInt("index", i);
-             textTrack.putString("title", format.id != null ? format.id : "");
-             textTrack.putString("type", format.sampleMimeType);
-             textTrack.putString("language", format.language != null ? format.language : "");
-             textTracks.pushMap(textTrack);
+            Format format = groups.get(i).getFormat(0);
+            WritableMap textTrack = Arguments.createMap();
+            textTrack.putInt("index", i);
+            textTrack.putString("title", format.id != null ? format.id : "");
+            textTrack.putString("label", format.label != null ? format.label : "");
+            textTrack.putString("type", format.sampleMimeType);
+            textTrack.putString("language", format.language != null ? format.language : "");
+            textTracks.pushMap(textTrack);
         }
         return textTracks;
     }
@@ -1100,6 +1102,14 @@ class ReactExoplayerView extends FrameLayout implements
     public void setTextTracks(ReadableArray textTracks) {
         this.textTracks = textTracks;
         reloadSource();
+    }
+
+    public void setFontSizeTrack(int fontSizeTrack) {
+        exoPlayerView.setFontSizeTrack(fontSizeTrack);
+    }
+
+    public void setPaddingBottomTrack(float paddingBottomTrack) {
+        exoPlayerView.setPaddingBottomTrack(paddingBottomTrack);
     }
 
     private void reloadSource() {

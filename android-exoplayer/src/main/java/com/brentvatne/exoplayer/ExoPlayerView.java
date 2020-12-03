@@ -3,8 +3,10 @@ package com.brentvatne.exoplayer;
 import android.annotation.TargetApi;
 import android.content.Context;
 import androidx.core.content.ContextCompat;
+import android.graphics.Color;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.SurfaceView;
 import android.view.TextureView;
@@ -20,6 +22,7 @@ import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.video.VideoListener;
 import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.TrackGroupArray;
+import com.google.android.exoplayer2.text.CaptionStyleCompat;
 import com.google.android.exoplayer2.text.Cue;
 import com.google.android.exoplayer2.text.TextRenderer;
 import com.google.android.exoplayer2.text.TextOutput;
@@ -78,6 +81,10 @@ public final class ExoPlayerView extends FrameLayout {
         subtitleLayout.setUserDefaultStyle();
         subtitleLayout.setUserDefaultTextSize();
 
+        subtitleLayout.setStyle(new CaptionStyleCompat(Color.WHITE,Color.TRANSPARENT, Color.TRANSPARENT, CaptionStyleCompat.EDGE_TYPE_DROP_SHADOW, Color.BLACK,null));
+        subtitleLayout.setApplyEmbeddedStyles(false);
+        subtitleLayout.setApplyEmbeddedFontSizes(false);
+
         updateSurfaceView();
 
         layout.addView(shutterView, 1, layoutParams);
@@ -92,6 +99,14 @@ public final class ExoPlayerView extends FrameLayout {
         } else if (surfaceView instanceof SurfaceView) {
             player.clearVideoSurfaceView((SurfaceView) surfaceView);
         }
+    }
+    
+    public void setFontSizeTrack(int fontSizeTrack) {
+        subtitleLayout.setFixedTextSize(TypedValue.COMPLEX_UNIT_SP, fontSizeTrack );
+    }
+
+    public void setPaddingBottomTrack(float paddingBottomTrack) {
+        subtitleLayout.setBottomPaddingFraction(paddingBottomTrack);
     }
 
     private void setVideoView() {

@@ -73,8 +73,10 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_HIDE_SHUTTER_VIEW = "hideShutterView";
     private static final String PROP_CONTROLS = "controls";
 
-    private static final String PROP_YOUBORA_PARAMS = "youboraParams";
+    private static final String PROP_FONT_SIZE_TRACK = "fontSizeTrack";
+    private static final String PROP_PADDING_BOTTOM_TRACK = "paddingBottomTrack";
 
+    private static final String PROP_YOUBORA_PARAMS = "youboraParams";
     private static final String PROP_YOUBORA_ACCOUNT_CODE = "accountCode";
     private static final String PROP_YOUBORA_USERNAME = "username";
     private static final String PROP_YOUBORA_CONTENT_TRANSACTION_CODE = "contentTransactionCode";
@@ -357,6 +359,16 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     @ReactProp(name = PROP_CONTROLS, defaultBoolean = false)
     public void setControls(final ReactExoplayerView videoView, final boolean controls) {
         videoView.setControls(controls);
+    }
+
+    @ReactProp(name = PROP_FONT_SIZE_TRACK)
+    public void setFontSizeTrack(final ReactExoplayerView videoView, final int fontSizeTrack) {
+        videoView.setFontSizeTrack(fontSizeTrack);
+    }
+
+    @ReactProp(name = PROP_PADDING_BOTTOM_TRACK, defaultFloat = 0.1f)
+    public void setPaddingBottomTrack(final ReactExoplayerView videoView, final float paddingBottomTrack) {
+        videoView.setPaddingBottomTrack(paddingBottomTrack);
     }
 
     @ReactProp(name = PROP_BUFFER_CONFIG)
