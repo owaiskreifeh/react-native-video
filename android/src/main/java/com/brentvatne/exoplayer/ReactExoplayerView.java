@@ -1181,6 +1181,15 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
         }
     }
 
+
+    public void setFontSizeTrack(int fontSizeTrack) {
+        exoPlayerView.setFontSizeTrack(fontSizeTrack);
+    }
+
+    public void setPaddingBottomTrack(float paddingBottomTrack) {
+        exoPlayerView.setPaddingBottomTrack(paddingBottomTrack);
+    }
+
     /**
      * AdEventListener implementation
      */

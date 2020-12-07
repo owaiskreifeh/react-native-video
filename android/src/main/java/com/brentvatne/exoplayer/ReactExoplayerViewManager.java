@@ -67,6 +67,8 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_YOUBORA_PARAMS = "youboraParams";
     private static final String PROP_LANGUAGE = "language";
     private static final String PROP_KILL_LAST_INSTANCE = "killLastInstance";
+    private static final String PROP_FONT_SIZE_TRACK = "fontSizeTrack";
+    private static final String PROP_PADDING_BOTTOM_TRACK = "paddingBottomTrack";
 
     private static final String PROP_YOUBORA_ACCOUNT_CODE = "accountCode";
     private static final String PROP_YOUBORA_USERNAME = "username";
@@ -428,6 +430,16 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     @ReactProp(name = PROP_THUMBNAILS_VTT_URL)
     public void setThumbnailsVttUrl(final ReactExoplayerView videoView, @Nullable String thumbnailsVttUrl) {
         videoView.setThumbnailsVttUrl(thumbnailsVttUrl);
+    }
+
+    @ReactProp(name = PROP_FONT_SIZE_TRACK)
+    public void setFontSizeTrack(final ReactExoplayerView videoView, final int fontSizeTrack) {
+        videoView.setFontSizeTrack(fontSizeTrack);
+    }
+
+    @ReactProp(name = PROP_PADDING_BOTTOM_TRACK, defaultFloat = 0.1f)
+    public void setPaddingBottomTrack(final ReactExoplayerView videoView, final float paddingBottomTrack) {
+        videoView.setPaddingBottomTrack(paddingBottomTrack);
     }
 
     @ReactProp(name = PROP_BUFFER_CONFIG)
