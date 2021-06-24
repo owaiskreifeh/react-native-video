@@ -932,6 +932,8 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
         }
         if (errorString != null) {
             eventEmitter.error(errorString, ex);
+        } else {
+            eventEmitter.error(e.getMessage(), ex);
         }
         playerNeedsSource = true;
         if (isBehindLiveWindow(e)) {
