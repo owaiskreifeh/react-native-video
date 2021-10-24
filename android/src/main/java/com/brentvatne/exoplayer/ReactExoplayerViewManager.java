@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
@@ -110,6 +112,9 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_YOUBORA_CONTENT_METADATA_DIRECTOR = "director";
     private static final String PROP_YOUBORA_CONTENT_METADATA_OWNER = "owner";
     private static final String PROP_YOUBORA_CONTENT_METADATA_CONTENT_ID = "content_id";
+
+    // analytics props
+    private static final String PROP_ANALYTICS = "analytics";
 
     private ReactExoplayerConfig config;
 
@@ -459,6 +464,11 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
                     ? bufferConfig.getInt(PROP_BUFFER_CONFIG_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS) : bufferForPlaybackAfterRebufferMs;
             videoView.setBufferConfig(minBufferMs, maxBufferMs, bufferForPlaybackMs, bufferForPlaybackAfterRebufferMs);
         }
+    }
+
+    @ReactProp(name = PROP_ANALYTICS)
+    public void setAnalytics(final ReactExoplayerView videoView,@NonNull ReadableMap analyticsParams){
+        videoView.setAnalyticsParams(analyticsParams);
     }
 
     private boolean startsWithValidScheme(String uriString) {
