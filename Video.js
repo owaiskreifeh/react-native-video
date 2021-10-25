@@ -461,6 +461,7 @@ Video.propTypes = {
   onPictureInPictureStatusChanged: PropTypes.func,
   needsToRestoreUserInterfaceForPictureInPictureStop: PropTypes.func,
   onExternalPlaybackChange: PropTypes.func,
+  analytics: PropTypes.object,
 
   /* Required by react-native */
   scaleX: PropTypes.number,

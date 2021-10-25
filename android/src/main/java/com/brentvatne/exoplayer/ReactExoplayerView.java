@@ -16,6 +16,8 @@ import android.view.Window;
 import android.view.accessibility.CaptioningManager;
 import android.widget.FrameLayout;
 
+import androidx.annotation.NonNull;
+
 import com.brentvatne.react.R;
 import com.brentvatne.receiver.AudioBecomingNoisyReceiver;
 import com.brentvatne.receiver.BecomingNoisyListener;
@@ -174,6 +176,9 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
     private boolean adsPlaying = false;
     private String language = "ar";
 
+    // Analytics
+    private Analytics analyticsParams;
+
     // Props from React
     private Uri srcUri;
     private String adsId;
@@ -267,11 +272,21 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
     }
 
     private StreamRequest buildStreamRequest() {
+        // prepare cust_params
+        String custParams = "shahid_localization=" + this.language;
+        // Get lotame aduiences from analytics params;
+        String lotameAudiencesString = this.analyticsParams.getLotameAudiencesString();
+        if (lotameAudiencesString != null) {
+            custParams = custParams.concat(String.format(
+                    "&lotame_audiences=%s",
+                    lotameAudiencesString
+            ));
+        }
         // VOD HLS request.
         String[] ids = adsId.split("_,_");
         StreamRequest request = mSdkFactory.createVodStreamRequest(ids[0], ids[1], null);
-        Map adTagParameters = new HashMap();
-        adTagParameters.put("cust_params", "shahid_localization=" + this.language);
+        HashMap<String, String> adTagParameters = new HashMap<String, String>();
+        adTagParameters.put("cust_params", custParams);
         request.setAdTagParameters(adTagParameters);
         request.setFormat(StreamFormat.HLS);
         return request;
@@ -1192,6 +1207,11 @@ class ReactExoplayerView extends FrameLayout implements LifecycleEventListener, 
 
     public void setPaddingBottomTrack(float paddingBottomTrack) {
         exoPlayerView.setPaddingBottomTrack(paddingBottomTrack);
+    }
+
+    public void setAnalyticsParams(@NonNull ReadableMap analyticsParams) {
+        this.analyticsParams = new Analytics(analyticsParams);
+
     }
 
     /**
