@@ -5,7 +5,7 @@ import { RCTViewManager } from "react-native-dom";
 import RCTVideo from "./RCTVideo";
 import resizeModes from "./resizeModes";
 
-import { VideoSource, YouboraParams } from "./types";
+import type { VideoSource } from "./types";
 
 class RCTVideoManager extends RCTViewManager {
   static moduleName = "RCTVideoManager";
@@ -28,9 +28,6 @@ class RCTVideoManager extends RCTViewManager {
       .addNumberProp("seek", this.setSeek)
       .addObjectProp("src", this.setSource)
       .addNumberProp("volume", this.setVolume)
-      .addStringProp("drmLicenseUrl", this.setDrmLicenseUrl)
-      .addStringProp("thumbnailsVttUrl", this.setThumbnailsVttUrl)
-      .addObjectProp("youboraParams", this.setYouboraParams)
       .addDirectEvent("onVideoEnd")
       .addDirectEvent("onVideoError")
       .addDirectEvent("onVideoLoad")
@@ -48,14 +45,6 @@ class RCTVideoManager extends RCTViewManager {
 
   setControls(view: RCTVideo, value: boolean) {
     view.controls = value;
-  }
-
-  setDrmLicenseUrl(view: RCTVideo, value: string) {
-    view.drmLicenseUrl = value;
-  }
-
-  setThumbnailsVttUrl(view: RCTVideo, value: string) {
-    view.thumbnailsVttUrl = value;
   }
 
   setId(view: RCTVideo, value: string) {
@@ -87,10 +76,6 @@ class RCTVideoManager extends RCTViewManager {
   }
 
   setSource(view: RCTVideo, value: VideoSource) {
-    view.source = value;
-  }
-
-  setYouboraParams(view: RCTVideo, value: YouboraParams) {
     view.source = value;
   }
 
