@@ -42,6 +42,7 @@ public final class ExoPlayerView extends FrameLayout {
     private SimpleExoPlayer player;
     private Context context;
     private ViewGroup.LayoutParams layoutParams;
+//    private boolean subtitlePaddingApplied = false;
 
     private boolean useTextureView = true;
     private boolean hideShutterView = false;
@@ -106,7 +107,19 @@ public final class ExoPlayerView extends FrameLayout {
     }
 
     public void setPaddingBottomTrack(float paddingBottomTrack) {
-        subtitleLayout.setBottomPaddingFraction(paddingBottomTrack);
+//        subtitleLayout.setBottomPaddingFraction(paddingBottomTrack);
+//        if (subtitlePaddingApplied) {
+            subtitleLayout.animate()
+                    .setDuration(500)
+                    .translationY(paddingBottomTrack * -1 * this.getHeight())
+                    .start();
+
+//        } else {
+//            Log.d("saffar", "setPaddingBottomTrack: " + paddingBottomTrack);
+//            subtitlePaddingApplied = true;
+//            subtitleLayout.setTranslationY(paddingBottomTrack * -1 * this.getHeight());
+//            subtitleLayout.postInvalidate();
+//        }
     }
 
     private void setVideoView() {
