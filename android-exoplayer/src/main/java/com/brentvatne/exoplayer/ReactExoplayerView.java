@@ -71,6 +71,12 @@ import com.google.android.exoplayer2.upstream.DefaultAllocator;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
+import com.npaw.youbora.lib6.adapter.PlayerAdapter;
+import com.npaw.youbora.lib6.exoplayer2.Exoplayer2Adapter;
+import com.npaw.youbora.lib6.plugin.Plugin;
+import com.npaw.youbora.lib6.plugin.Options;
+
+import org.json.JSONObject;
 
 import java.net.CookieHandler;
 import java.net.CookieManager;
@@ -80,6 +86,8 @@ import java.util.Locale;
 import java.util.UUID;
 import java.util.Map;
 
+import androidx.annotation.NonNull;
+
 @SuppressLint("ViewConstructor")
 class ReactExoplayerView extends FrameLayout implements
         LifecycleEventListener,
@@ -88,6 +96,7 @@ class ReactExoplayerView extends FrameLayout implements
         BecomingNoisyListener,
         AudioManager.OnAudioFocusChangeListener,
         MetadataOutput,
+        Plugin.WillSendRequestListener,
         DrmSessionEventListener {
 
     private static final String TAG = "ReactExoplayerView";
@@ -163,6 +172,9 @@ class ReactExoplayerView extends FrameLayout implements
     private final ThemedReactContext themedReactContext;
     private final AudioManager audioManager;
     private final AudioBecomingNoisyReceiver audioBecomingNoisyReceiver;
+
+    private static Plugin youboraPlugin = null;
+    private boolean currentlyInRetry = false;
 
     private final Handler progressHandler = new Handler() {
         @Override
@@ -411,7 +423,7 @@ class ReactExoplayerView extends FrameLayout implements
                             new DefaultRenderersFactory(getContext())
                                     .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF);
                     player = new SimpleExoPlayer.Builder(getContext(), renderersFactory)
-                                .setTrackSelector​(trackSelector)
+                                .setTrackSelector(trackSelector)
                                 .setBandwidthMeter(bandwidthMeter)
                                 .setLoadControl(defaultLoadControl)
                                 .build();
@@ -425,6 +437,10 @@ class ReactExoplayerView extends FrameLayout implements
 
                     PlaybackParameters params = new PlaybackParameters(rate, 1f);
                     player.setPlaybackParameters(params);
+
+                    if (youboraPlugin != null && youboraPlugin.getAdapter() == null) {
+                        youboraPlugin.setAdapter(new Exoplayer2Adapter(player));
+                    }
                 }
                 if (playerNeedsSource && srcUri != null) {
                     exoPlayerView.invalidateAspectRatio();
@@ -478,8 +494,7 @@ class ReactExoplayerView extends FrameLayout implements
         }, 1);
     }
 
-    private DrmSessionManager buildDrmSessionManager(UUID uuid,
-                                                                           String licenseUrl, String[] keyRequestPropertiesArray) throws UnsupportedDrmException {
+    private DrmSessionManager buildDrmSessionManager(UUID uuid, String licenseUrl, String[] keyRequestPropertiesArray) throws UnsupportedDrmException {
         if (Util.SDK_INT < 18) {
             return null;
         }
@@ -563,6 +578,11 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     private void releasePlayer() {
+        Log.d("saffar", "releasePlayer: ");
+        if (youboraPlugin != null) {
+            youboraPlugin.removeAdapter();
+            youboraPlugin.removeOnWillSendErrorListener(this);
+        }
         if (player != null) {
             updateResumePosition();
             player.release();
@@ -791,6 +811,12 @@ class ReactExoplayerView extends FrameLayout implements
 
     private void videoLoaded() {
         if (loadVideoStarted) {
+            if (currentlyInRetry && youboraPlugin != null && youboraPlugin.getAdapter() != null) {
+                Log.d("saffar", "videoLoaded: ");
+                youboraPlugin.getAdapter().registerListeners();
+                youboraPlugin.fireInit();
+            }
+            currentlyInRetry = false;
             loadVideoStarted = false;
             setSelectedAudioTrack(audioTrackType, audioTrackValue);
             setSelectedVideoTrack(videoTrackType, videoTrackValue);
@@ -968,9 +994,19 @@ class ReactExoplayerView extends FrameLayout implements
         }
         eventEmitter.error(errorString, ex);
         playerNeedsSource = true;
+
         if (isBehindLiveWindow(e)) {
-            clearResumePosition();
-            initializePlayer();
+            // retry after 5 seconds
+            new Handler().postDelayed(
+                new Runnable() {
+                    public void run() {
+                        if (player != null) {
+                            currentlyInRetry = true; // to disable to youbora
+                            clearResumePosition();
+                            initializePlayer();
+                        }
+                    }
+                }, 5000);
         } else {
             updateResumePosition();
         }
@@ -1393,5 +1429,53 @@ class ReactExoplayerView extends FrameLayout implements
                 removeViewAt(indexOfPC);
             }
         }
+    }
+
+
+    public void setYouboraParams(Options youboraOptions) {
+        Log.d("saffar", "setYouboraParams: ");
+        if (youboraOptions == null){
+            if (youboraPlugin != null) {
+                youboraPlugin.removeAdapter();
+                youboraPlugin.removeOnWillSendErrorListener(this);
+                youboraPlugin = null;
+            }
+            return;
+        }
+        if (youboraPlugin == null) {
+            youboraPlugin = new Plugin(youboraOptions, this.getContext());
+        } else {
+            youboraPlugin.setOptions(youboraOptions);
+            youboraPlugin.setApplicationContext(this.getContext());
+//            youboraPlugin.enable();
+        }
+
+        youboraPlugin.removeOnWillSendErrorListener(this);
+        youboraPlugin.addOnWillSendErrorListener(this);
+        youboraPlugin.setActivity(themedReactContext.getCurrentActivity());
+    }
+
+
+    @Override // youbora OnWillSendError Listener
+    public void willSendRequest(String serviceName, Plugin plugin, Map<String, String> params) {
+        if (!currentlyInRetry){
+            youboraPlugin.getAdapter().unregisterListeners();
+        }
+
+//        new Handler().postDelayed(new Runnable() {
+//            public void run() {
+//                if (youboraPlugin != null) {
+//                    Log.d("saffar", "youboraPlugin disable: ");
+//                    youboraPlugin.fireStop();
+//                    youboraPlugin.removeAdapter();
+//                    youboraPlugin.disable();
+//                }
+//            }
+//        }, 1000);
+    }
+
+    @Override // youbora OnWillSendError Listener (not needed)
+    public void willSendRequest(String serviceName, Plugin plugin, ArrayList<JSONObject> params) {
+        // do nothing
     }
 }

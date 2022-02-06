@@ -2,6 +2,7 @@ package com.brentvatne.exoplayer;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -17,6 +18,7 @@ import com.facebook.react.bridge.ReactMethod;
 import com.google.android.exoplayer2.util.Util;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.upstream.RawResourceDataSource;
+import com.npaw.youbora.lib6.plugin.Options;
 
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -70,6 +72,49 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_SELECTED_VIDEO_TRACK_VALUE = "value";
     private static final String PROP_HIDE_SHUTTER_VIEW = "hideShutterView";
     private static final String PROP_CONTROLS = "controls";
+
+    private static final String PROP_YOUBORA_PARAMS = "youboraParams";
+
+    private static final String PROP_YOUBORA_ACCOUNT_CODE = "accountCode";
+    private static final String PROP_YOUBORA_USERNAME = "username";
+    private static final String PROP_YOUBORA_CONTENT_TRANSACTION_CODE = "contentTransactionCode";
+    private static final String PROP_YOUBORA_IS_LIVE = "isLive";
+    private static final String PROP_YOUBORA_PARSE_CDN_NODE = "parseCdnNode";
+    private static final String PROP_YOUBORA_ENABLED = "enabled";
+    private static final String PROP_YOUBORA_TITLE = "title";
+    private static final String PROP_YOUBORA_PROGRAM = "program";
+    private static final String PROP_YOUBORA_TV_SHOW = "tvShow";
+    private static final String PROP_YOUBORA_SEASON = "season";
+    private static final String PROP_YOUBORA_CONTENT_TYPE = "contentType";
+    private static final String PROP_YOUBORA_CONTENT_ID = "contentId";
+    private static final String PROP_YOUBORA_CONTENT_PLAYBACK_TYPE = "contentPlaybackType";
+    private static final String PROP_YOUBORA_CONTENT_DURATION = "contentDuration";
+    private static final String PROP_YOUBORA_CONTENT_DRM = "contentDrm";
+    private static final String PROP_YOUBORA_CONTENT_RESOURCE = "contentResource";
+    private static final String PROP_YOUBORA_CONTENT_GENRE = "contentGenre";
+    private static final String PROP_YOUBORA_CONTENT_LANGUAGE = "contentLanguage";
+    private static final String PROP_YOUBORA_CONTENT_CHANNELS = "contentChannels";
+    private static final String PROP_YOUBORA_CONTENT_STREAMING_PROTOCOL = "contentStreamingProtocol";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_1 = "contentCustomDimension1";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_2 = "contentCustomDimension2";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_3 = "contentCustomDimension3";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_4 = "contentCustomDimension4";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_5 = "contentCustomDimension5";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_6 = "contentCustomDimension6";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_7 = "contentCustomDimension7";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_8 = "contentCustomDimension8";
+    private static final String PROP_YOUBORA_RENDITION= "rendition";
+    private static final String PROP_YOUBORA_USER_TYPE = "userType";
+
+    private static final String PROP_YOUBORA_CONTENT_METADATA = "contentMetadata";
+    private static final String PROP_YOUBORA_CONTENT_METADATA_GENRE = "genre";
+    private static final String PROP_YOUBORA_CONTENT_METADATA_LANGUAGE = "language";
+    private static final String PROP_YOUBORA_CONTENT_METADATA_CHANNEL = "channel";
+    private static final String PROP_YOUBORA_CONTENT_METADATA_YEAR = "year";
+    private static final String PROP_YOUBORA_CONTENT_METADATA_CAST = "cast";
+    private static final String PROP_YOUBORA_CONTENT_METADATA_DIRECTOR = "director";
+    private static final String PROP_YOUBORA_CONTENT_METADATA_OWNER = "owner";
+    private static final String PROP_YOUBORA_CONTENT_METADATA_CONTENT_ID = "content_id";
 
     private ReactExoplayerConfig config;
 
@@ -331,6 +376,100 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
                     ? bufferConfig.getInt(PROP_BUFFER_CONFIG_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS) : bufferForPlaybackAfterRebufferMs;
             videoView.setBufferConfig(minBufferMs, maxBufferMs, bufferForPlaybackMs, bufferForPlaybackAfterRebufferMs);
         }
+    }
+
+    @ReactProp(name = PROP_YOUBORA_PARAMS)
+    public void setYouboraParams(final ReactExoplayerView videoView, @Nullable ReadableMap src) {
+        if (src == null){
+            Log.d("saffar", "PROP_YOUBORA_PARAMS: null" );
+            videoView.setYouboraParams(null);
+            return;
+        }
+
+        Log.d("saffar", "PROP_YOUBORA_PARAMS: " + src.toString());
+
+        String accountCode = src.hasKey(PROP_YOUBORA_ACCOUNT_CODE) ? src.getString(PROP_YOUBORA_ACCOUNT_CODE) : null;
+        String username = src.hasKey(PROP_YOUBORA_USERNAME) ? src.getString(PROP_YOUBORA_USERNAME) : null;
+        String contentTransactionCode = src.hasKey(PROP_YOUBORA_CONTENT_TRANSACTION_CODE) ? src.getString(PROP_YOUBORA_CONTENT_TRANSACTION_CODE) : null;
+        boolean isLive = src.hasKey(PROP_YOUBORA_IS_LIVE) ? src.getBoolean(PROP_YOUBORA_IS_LIVE) : false;
+        boolean parseCdnNode = src.hasKey(PROP_YOUBORA_PARSE_CDN_NODE) ? src.getBoolean(PROP_YOUBORA_PARSE_CDN_NODE) : false;
+        boolean enabled = src.hasKey(PROP_YOUBORA_ENABLED) ? src.getBoolean(PROP_YOUBORA_ENABLED) : false;
+        String title = src.hasKey(PROP_YOUBORA_TITLE) ? src.getString(PROP_YOUBORA_TITLE) : null;
+        String program = src.hasKey(PROP_YOUBORA_PROGRAM) ? src.getString(PROP_YOUBORA_PROGRAM) : null;
+        String tvShow = src.hasKey(PROP_YOUBORA_TV_SHOW) ? src.getString(PROP_YOUBORA_TV_SHOW) : null;
+        String season = src.hasKey(PROP_YOUBORA_SEASON) ? src.getString(PROP_YOUBORA_SEASON) : null;
+        String contentType = src.hasKey(PROP_YOUBORA_CONTENT_TYPE) ? src.getString(PROP_YOUBORA_CONTENT_TYPE) : null;
+        String contentId = src.hasKey(PROP_YOUBORA_CONTENT_ID) ? src.getString(PROP_YOUBORA_CONTENT_ID) : null;
+        String contentPlaybackType = src.hasKey(PROP_YOUBORA_CONTENT_PLAYBACK_TYPE) ? src.getString(PROP_YOUBORA_CONTENT_PLAYBACK_TYPE) : null;
+        double contentDuration = src.hasKey(PROP_YOUBORA_CONTENT_DURATION) ? src.getDouble(PROP_YOUBORA_CONTENT_DURATION) : 0.00;
+        boolean contentDrm = src.hasKey(PROP_YOUBORA_CONTENT_DRM) ? src.getBoolean(PROP_YOUBORA_CONTENT_DRM) : false;
+        String contentResource = src.hasKey(PROP_YOUBORA_CONTENT_RESOURCE) ? src.getString(PROP_YOUBORA_CONTENT_RESOURCE) : null;
+        String contentGenre = src.hasKey(PROP_YOUBORA_CONTENT_GENRE) ? src.getString(PROP_YOUBORA_CONTENT_GENRE) : null;
+        String contentLanguage = src.hasKey(PROP_YOUBORA_CONTENT_LANGUAGE) ? src.getString(PROP_YOUBORA_CONTENT_LANGUAGE) : null;
+        String contentChannels = src.hasKey(PROP_YOUBORA_CONTENT_CHANNELS) ? src.getString(PROP_YOUBORA_CONTENT_CHANNELS) : null;
+        String contentStreamingProtocol = src.hasKey(PROP_YOUBORA_CONTENT_STREAMING_PROTOCOL) ? src.getString(PROP_YOUBORA_CONTENT_STREAMING_PROTOCOL) : null;
+        String contentCustomDimension1 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_1) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_1) : null;
+        String contentCustomDimension2 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_2) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_2) : null;
+        String contentCustomDimension3 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_3) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_3) : null;
+        String contentCustomDimension4 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_4) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_4) : null;
+        String contentCustomDimension5 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_5) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_5) : null;
+        String contentCustomDimension6 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_6) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_6) : null;
+        String contentCustomDimension7 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_7) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_7) : null;
+        String contentCustomDimension8 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_8) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_8) : null;
+        String rendition = src.hasKey(PROP_YOUBORA_RENDITION) ? src.getString(PROP_YOUBORA_RENDITION) : null;
+        String userType = src.hasKey(PROP_YOUBORA_USER_TYPE) ? src.getString(PROP_YOUBORA_USER_TYPE) : null;
+        Map<String, String> contentMetadata = src.hasKey(PROP_YOUBORA_CONTENT_METADATA) ? toStringMap(src.getMap(PROP_YOUBORA_CONTENT_METADATA)) : null;
+
+        Bundle metadataBundle = new Bundle();
+        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_GENRE, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_GENRE));
+        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_LANGUAGE, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_LANGUAGE));
+        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_CHANNEL, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_CHANNEL));
+        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_YEAR, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_YEAR));
+        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_CAST, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_CAST));
+        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_DIRECTOR, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_DIRECTOR));
+        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_OWNER, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_OWNER));
+        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_CONTENT_ID, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_CONTENT_ID));
+
+        Options youboraOptions = new Options();
+
+        youboraOptions.setAccountCode(accountCode); // Account code
+        youboraOptions.setUsername(username);  // UserId or Guest
+        youboraOptions.setContentTransactionCode(contentTransactionCode); // Subscribed or Free
+        youboraOptions.setContentIsLive(isLive); // VOD or Live
+        youboraOptions.setParseCdnNode(parseCdnNode);   // Allow Youbora to parse CDN from Host
+        youboraOptions.setEnabled(enabled);
+        youboraOptions.setContentRendition(rendition);
+
+        youboraOptions.setContentTitle(title);  // Content Title
+        youboraOptions.setProgram(program);  // Content Title 2
+        youboraOptions.setContentTvShow(tvShow); // Show name for shows, otherwise empty
+        youboraOptions.setContentSeason(season); // Season number for shows, otherwise empty
+        youboraOptions.setContentType(contentType);  // movie, series & program
+        youboraOptions.setContentId(contentId);  // Content Id
+        youboraOptions.setContentPlaybackType(contentPlaybackType); // sVOD or aVOD
+        youboraOptions.setContentDuration(contentDuration); // Duration in millis
+        youboraOptions.setContentDrm(String.valueOf(contentDrm));
+
+        youboraOptions.setContentResource(contentResource);    // Content Url
+        youboraOptions.setContentGenre(contentGenre);  // Content Genre comma separated
+        youboraOptions.setContentLanguage(contentLanguage); // Content dialects comma separated
+        youboraOptions.setContentChannel(contentChannels);
+
+        youboraOptions.setContentStreamingProtocol(contentStreamingProtocol); // HLS, widevine or widevine dash
+
+        youboraOptions.setContentCustomDimension1(contentCustomDimension1);
+        youboraOptions.setContentCustomDimension2(contentCustomDimension2);
+        youboraOptions.setContentCustomDimension3(contentCustomDimension3);
+        youboraOptions.setContentCustomDimension4(contentCustomDimension4);
+        youboraOptions.setContentCustomDimension5(contentCustomDimension5);
+        youboraOptions.setContentCustomDimension6(contentCustomDimension6);
+        youboraOptions.setContentCustomDimension7(contentCustomDimension7);
+        youboraOptions.setContentCustomDimension8(contentCustomDimension8);
+        youboraOptions.setUserType(userType);
+
+        youboraOptions.setContentMetadata(metadataBundle);
+
+        videoView.setYouboraParams(youboraOptions);
     }
 
     private boolean startsWithValidScheme(String uriString) {
