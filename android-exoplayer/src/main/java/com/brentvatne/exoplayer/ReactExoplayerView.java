@@ -71,10 +71,6 @@ import com.google.android.exoplayer2.upstream.DefaultAllocator;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
-import com.npaw.youbora.lib6.adapter.PlayerAdapter;
-import com.npaw.youbora.lib6.exoplayer2.Exoplayer2Adapter;
-import com.npaw.youbora.lib6.plugin.Plugin;
-import com.npaw.youbora.lib6.plugin.Options;
 
 import org.json.JSONObject;
 
@@ -87,6 +83,24 @@ import java.util.UUID;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
+
+import com.npaw.youbora.lib6.adapter.PlayerAdapter;
+import com.npaw.youbora.lib6.exoplayer2.Exoplayer2Adapter;
+import com.npaw.youbora.lib6.plugin.Plugin;
+import com.npaw.youbora.lib6.plugin.Options;
+
+import com.google.ads.interactivemedia.v3.api.AdErrorEvent;
+import com.google.ads.interactivemedia.v3.api.AdEvent;
+import com.google.ads.interactivemedia.v3.api.AdsLoader;
+import com.google.ads.interactivemedia.v3.api.AdsManagerLoadedEvent;
+import com.google.ads.interactivemedia.v3.api.CuePoint;
+import com.google.ads.interactivemedia.v3.api.ImaSdkFactory;
+import com.google.ads.interactivemedia.v3.api.ImaSdkSettings;
+import com.google.ads.interactivemedia.v3.api.StreamDisplayContainer;
+import com.google.ads.interactivemedia.v3.api.StreamManager;
+import com.google.ads.interactivemedia.v3.api.StreamRequest;
+import com.google.ads.interactivemedia.v3.api.player.VideoProgressUpdate;
+import com.google.ads.interactivemedia.v3.api.player.VideoStreamPlayer;
 
 @SuppressLint("ViewConstructor")
 class ReactExoplayerView extends FrameLayout implements
@@ -147,6 +161,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     // Props from React
     private Uri srcUri;
+    private String adsId;
     private String extension;
     private boolean repeat;
     private String audioTrackType;
@@ -1049,18 +1064,20 @@ class ReactExoplayerView extends FrameLayout implements
 
     // ReactExoplayerViewManager public api
 
-    public void setSrc(final Uri uri, final String extension, Map<String, String> headers) {
+    public void setSrc(final Uri uri, final String extension, Map<String, String> headers, String ads) {
         if (uri != null) {
             boolean isSourceEqual = uri.equals(srcUri);
+            boolean isAdsSourceEqual = ads == this.adsId;
 
             this.srcUri = uri;
+            this.adsId = ads;
             this.extension = extension;
             this.requestHeaders = headers;
             this.mediaDataSourceFactory =
                     DataSourceUtil.getDefaultDataSourceFactory(this.themedReactContext, bandwidthMeter,
                             this.requestHeaders);
 
-            if (!isSourceEqual) {
+            if (!isSourceEqual || !isAdsSourceEqual) {
                 reloadSource();
             }
         }

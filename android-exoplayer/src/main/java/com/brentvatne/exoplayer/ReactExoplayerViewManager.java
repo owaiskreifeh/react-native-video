@@ -197,9 +197,10 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
 
         if (startsWithValidScheme(uriString)) {
             Uri srcUri = Uri.parse(uriString);
+            String adsId = src.hasKey("adsId") ? src.getString("adsId") : null;
 
             if (srcUri != null) {
-                videoView.setSrc(srcUri, extension, headers);
+                videoView.setSrc(srcUri, extension, headers, adsId);
             }
         } else {
             int identifier = context.getResources().getIdentifier(
@@ -366,7 +367,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         videoView.setFontSizeTrack(fontSizeTrack);
     }
 
-    @ReactProp(name = PROP_PADDING_BOTTOM_TRACK, defaultFloat = 0.1f)
+    @ReactProp(name = PROP_PADDING_BOTTOM_TRACK, defaultFloat = 0f)
     public void setPaddingBottomTrack(final ReactExoplayerView videoView, final float paddingBottomTrack) {
         videoView.setPaddingBottomTrack(paddingBottomTrack);
     }
