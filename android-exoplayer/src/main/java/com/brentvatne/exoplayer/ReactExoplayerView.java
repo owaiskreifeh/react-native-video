@@ -84,22 +84,9 @@ import java.util.Map;
 
 import androidx.annotation.NonNull;
 
-import com.npaw.youbora.lib6.adapter.PlayerAdapter;
 import com.npaw.youbora.lib6.exoplayer2.Exoplayer2Adapter;
 import com.npaw.youbora.lib6.plugin.Plugin;
 import com.npaw.youbora.lib6.plugin.Options;
-
-import com.google.ads.interactivemedia.v3.api.AdErrorEvent;
-import com.google.ads.interactivemedia.v3.api.AdEvent;
-import com.google.ads.interactivemedia.v3.api.AdsLoader;
-import com.google.ads.interactivemedia.v3.api.AdsManagerLoadedEvent;
-import com.google.ads.interactivemedia.v3.api.CuePoint;
-import com.google.ads.interactivemedia.v3.api.ImaSdkFactory;
-import com.google.ads.interactivemedia.v3.api.ImaSdkSettings;
-import com.google.ads.interactivemedia.v3.api.StreamDisplayContainer;
-import com.google.ads.interactivemedia.v3.api.StreamManager;
-import com.google.ads.interactivemedia.v3.api.StreamRequest;
-import com.google.ads.interactivemedia.v3.api.player.VideoProgressUpdate;
 import com.google.ads.interactivemedia.v3.api.player.VideoStreamPlayer;
 
 @SuppressLint("ViewConstructor")
@@ -188,8 +175,21 @@ class ReactExoplayerView extends FrameLayout implements
     private final AudioManager audioManager;
     private final AudioBecomingNoisyReceiver audioBecomingNoisyReceiver;
 
+    // Youbora
     private static Plugin youboraPlugin = null;
     private boolean currentlyInRetry = false;
+    private GoogleDai googleDai = null;
+
+
+    // Google DAI
+    /**
+     * Video player callback interface that extends IMA's VideoStreamPlayerCallback by adding the
+     * onSeek() callback to support ad snapback.
+     */
+    public interface ExoPlayerCallback extends VideoStreamPlayer.VideoStreamPlayerCallback {
+        void onSeek(int windowIndex, long positionMs);
+    }
+    private ExoPlayerCallback playerCallback;
 
     private final Handler progressHandler = new Handler() {
         @Override
@@ -593,10 +593,13 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     private void releasePlayer() {
-        Log.d("saffar", "releasePlayer: ");
         if (youboraPlugin != null) {
             youboraPlugin.removeAdapter();
             youboraPlugin.removeOnWillSendErrorListener(this);
+        }
+        if (googleDai != null) {
+            googleDai.release();
+            googleDai = null;
         }
         if (player != null) {
             updateResumePosition();
@@ -1077,7 +1080,13 @@ class ReactExoplayerView extends FrameLayout implements
                     DataSourceUtil.getDefaultDataSourceFactory(this.themedReactContext, bandwidthMeter,
                             this.requestHeaders);
 
-            if (!isSourceEqual || !isAdsSourceEqual) {
+            if (!isAdsSourceEqual) {
+                if (ads != null) {
+                    googleDai = new GoogleDai(themedReactContext, this, ads, uri);
+                } else {
+                    reloadSource();
+                }
+            } else if (!isSourceEqual) {
                 reloadSource();
             }
         }
@@ -1319,9 +1328,18 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void seekTo(long positionMs) {
         if (player != null) {
-            seekTime = positionMs;
-            player.seekTo(positionMs);
+            if (playerCallback != null && googleDai != null) {
+                playerCallback.onSeek(player.getCurrentWindowIndex(), positionMs);
+            } else {
+                seekTime = positionMs;
+                player.seekTo(positionMs);
+            }
         }
+    }
+
+    public void seekToFromAfterCallback(long positionMs) {
+        seekTime = positionMs;
+        player.seekTo(positionMs);
     }
 
     public void setRateModifier(float newRate) {
@@ -1460,7 +1478,6 @@ class ReactExoplayerView extends FrameLayout implements
 
 
     public void setYouboraParams(Options youboraOptions) {
-        Log.d("saffar", "setYouboraParams: ");
         if (youboraOptions == null){
             if (youboraPlugin != null) {
                 youboraPlugin.removeAdapter();
@@ -1474,7 +1491,6 @@ class ReactExoplayerView extends FrameLayout implements
         } else {
             youboraPlugin.setOptions(youboraOptions);
             youboraPlugin.setApplicationContext(this.getContext());
-//            youboraPlugin.enable();
         }
 
         youboraPlugin.removeOnWillSendErrorListener(this);
@@ -1488,21 +1504,32 @@ class ReactExoplayerView extends FrameLayout implements
         if (!currentlyInRetry){
             youboraPlugin.getAdapter().unregisterListeners();
         }
-
-//        new Handler().postDelayed(new Runnable() {
-//            public void run() {
-//                if (youboraPlugin != null) {
-//                    Log.d("saffar", "youboraPlugin disable: ");
-//                    youboraPlugin.fireStop();
-//                    youboraPlugin.removeAdapter();
-//                    youboraPlugin.disable();
-//                }
-//            }
-//        }, 1000);
     }
 
     @Override // youbora OnWillSendError Listener (not needed)
     public void willSendRequest(String serviceName, Plugin plugin, ArrayList<JSONObject> params) {
         // do nothing
+    }
+
+    public void setExoPlayerCallback(ExoPlayerCallback callback) {
+        playerCallback = callback;
+        eventEmitter.playerCallback = callback;
+    }
+    public long getCurrentPositionMs() {
+        if (player != null) {
+            return player.getCurrentPosition();
+        }
+        return 0;
+    }
+    public long getDuration() {
+        if (player != null) {
+            return player.getDuration();
+        }
+        return 0;
+    }
+
+    public void setAdsSrc(String src) {
+        this.srcUri = Uri.parse(src);
+        reloadSource();
     }
 }

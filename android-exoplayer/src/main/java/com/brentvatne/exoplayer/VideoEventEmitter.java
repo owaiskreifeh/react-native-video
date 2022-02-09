@@ -21,6 +21,7 @@ class VideoEventEmitter {
     private final RCTEventEmitter eventEmitter;
 
     private int viewId = View.NO_ID;
+    public ReactExoplayerView.ExoPlayerCallback playerCallback;
 
     VideoEventEmitter(ReactContext reactContext) {
         this.eventEmitter = reactContext.getJSModule(RCTEventEmitter.class);
@@ -265,6 +266,10 @@ class VideoEventEmitter {
 
                 String identifier = frame.id;
 
+                if (playerCallback != null && "TXXX".equals(identifier)) {
+                    playerCallback.onUserTextReceived(value);
+                }
+
                 WritableMap map = Arguments.createMap();
                 map.putString("identifier", identifier);
                 map.putString("value", value);
@@ -274,6 +279,11 @@ class VideoEventEmitter {
             } else if (entry instanceof EventMessage) {
                 
                 EventMessage eventMessage = (EventMessage) entry;
+
+                if (playerCallback != null) {
+                    String eventMessageValue = new String(eventMessage.messageData);
+                    playerCallback.onUserTextReceived(eventMessageValue);
+                }
                 
                 WritableMap map = Arguments.createMap();
                 map.putString("identifier", eventMessage.schemeIdUri);

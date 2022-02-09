@@ -301,6 +301,7 @@ export default class Video extends Component {
       resizeMode: nativeResizeMode,
       src: {
         uri,
+        adsId: source.adsId || null,
         isNetwork,
         isAsset,
         shouldCache,
