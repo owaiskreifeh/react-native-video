@@ -180,6 +180,8 @@ class ReactExoplayerView extends FrameLayout implements
     private boolean currentlyInRetry = false;
     private GoogleDai googleDai = null;
 
+    // Analytics
+    private Analytics analyticsParams;
 
     // Google DAI
     /**
@@ -1105,7 +1107,7 @@ class ReactExoplayerView extends FrameLayout implements
             if (!isAdsSourceEqual) {
                 if (ads != null) {
                     this.srcUri = null;
-                    googleDai = new GoogleDai(themedReactContext, language,this, eventEmitter, ads, uri);
+                    initGoogleDai();
                 } else {
                     googleDai = null;
                     reloadSource();
@@ -1117,11 +1119,22 @@ class ReactExoplayerView extends FrameLayout implements
         }
     }
 
+    private void initGoogleDai() {
+        ReactExoplayerView self = this;
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                googleDai = new GoogleDai(themedReactContext, language, analyticsParams, self, eventEmitter, adsId, srcUri);
+            }
+        },1);
+    }
+
     public void clearSrc() {
         if (player != null) {
             player.stop(true);
         }
         this.srcUri = null;
+        this.adsId = null;
         this.extension = null;
         this.requestHeaders = null;
         this.mediaDataSourceFactory = null;
@@ -1560,5 +1573,13 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setLanguage(String lang) {
         this.language = lang;
+    }
+
+    public void setAnalyticsParams(ReadableMap analyticsParams) {
+        if (analyticsParams == null){
+            this.analyticsParams = null;
+        } else {
+            this.analyticsParams = new Analytics(analyticsParams);
+        }
     }
 }

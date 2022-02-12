@@ -43,7 +43,14 @@ public class GoogleDai implements AdEvent.AdEventListener, AdErrorEvent.AdErrorL
     private long adProgtrssEmmitTime = 0;
     private boolean cuePointsEmitted = false;
 
-    public GoogleDai(Context context, String language, ReactExoplayerView videoPlayer, VideoEventEmitter eventEmitter, String adsId, Uri fallbackUrl) {
+    public GoogleDai(Context context,
+                     String language,
+                     Analytics analyticsParams,
+                     ReactExoplayerView videoPlayer,
+                     VideoEventEmitter eventEmitter,
+                     String adsId,
+                     Uri fallbackUrl
+    ) {
 
         this.videoPlayer = videoPlayer;
         this.fallbackUrl = fallbackUrl;
@@ -57,10 +64,10 @@ public class GoogleDai implements AdEvent.AdEventListener, AdErrorEvent.AdErrorL
         );
 
         setPlayerCallback();
-        createAdsLoader(context, language, adsId);
+        createAdsLoader(context, language, analyticsParams, adsId);
     }
 
-    private void createAdsLoader(Context context, String language, String adsId) {
+    private void createAdsLoader(Context context, String language, Analytics analyticsParams, String adsId) {
         ImaSdkSettings settings = sdkFactory.createImaSdkSettings();
         //settings.setDebugMode(true);
         settings.setLanguage(language);
@@ -71,11 +78,27 @@ public class GoogleDai implements AdEvent.AdEventListener, AdErrorEvent.AdErrorL
         String[] separatedIDs = adsId.split("_,_");
         StreamRequest request = sdkFactory.createVodStreamRequest(separatedIDs[0], separatedIDs[1], null);
 
-        Map adTagParameters = new HashMap();
-        adTagParameters.put("cust_params", "shahid_localization=" + language);
-        request.setAdTagParameters(adTagParameters);
+        request.setAdTagParameters(getTagParameters(language, analyticsParams));
 
         adsLoader.requestStream(request);
+    }
+
+    private HashMap getTagParameters(String language, Analytics analyticsParams) {
+        String custParams = "shahid_localization=" + language;
+        // Get lotame aduiences from analytics params;
+        if (analyticsParams != null) {
+            String lotameAudiencesString = analyticsParams.getLotameAudiencesString();
+            if (lotameAudiencesString != null) {
+                custParams = custParams.concat(String.format(
+                        "&lotame_audiences=%s",
+                        lotameAudiencesString
+                ));
+            }
+        }
+
+        HashMap<String, String> adTagParameters = new HashMap<>();
+        adTagParameters.put("cust_params", custParams);
+        return adTagParameters;
     }
 
     private void setPlayerCallback() {
@@ -312,8 +335,8 @@ public class GoogleDai implements AdEvent.AdEventListener, AdErrorEvent.AdErrorL
 
                 for (CuePoint cuePoint : cuePoints) {
                     //if (!cuePoint.isPlayed()) {
-                        float adTime = cuePoint.getStartTimeMs();
-                        writableArrayOfCuePoints.pushDouble(adTime / duration * 100);
+                    float adTime = cuePoint.getStartTimeMs();
+                    writableArrayOfCuePoints.pushDouble(adTime / duration * 100);
                     //}
                 }
 
