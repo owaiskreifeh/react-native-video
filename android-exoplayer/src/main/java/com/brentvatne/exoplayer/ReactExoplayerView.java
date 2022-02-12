@@ -190,6 +190,7 @@ class ReactExoplayerView extends FrameLayout implements
         void onSeek(int windowIndex, long positionMs);
     }
     private ExoPlayerCallback playerCallback;
+    private String language = "ar";
 
     private final Handler progressHandler = new Handler() {
         @Override
@@ -199,10 +200,17 @@ class ReactExoplayerView extends FrameLayout implements
                     if (player != null
                             && player.getPlaybackState() == Player.STATE_READY
                             && player.getPlayWhenReady()
-                            ) {
+                    ) {
                         long pos = player.getCurrentPosition();
+                        long duration = player.getDuration();
+
+                        if (googleDai != null) {
+                            pos = googleDai.getContentTime(pos);
+                            duration = googleDai.getContentTime(duration);
+                        }
+
                         long bufferedDuration = player.getBufferedPercentage() * player.getDuration() / 100;
-                        eventEmitter.progressChanged(pos, bufferedDuration, player.getDuration(), getPositionInFirstPeriodMsForCurrentWindow(pos));
+                        eventEmitter.progressChanged(pos, bufferedDuration, duration, getPositionInFirstPeriodMsForCurrentWindow(pos));
                         msg = obtainMessage(SHOW_PROGRESS);
                         sendMessageDelayed(msg, Math.round(mProgressUpdateInterval));
                     }
@@ -210,10 +218,10 @@ class ReactExoplayerView extends FrameLayout implements
             }
         }
     };
-    
+
     public double getPositionInFirstPeriodMsForCurrentWindow(long currentPosition) {
         Timeline.Window window = new Timeline.Window();
-        if(!player.getCurrentTimeline().isEmpty()) {    
+        if(!player.getCurrentTimeline().isEmpty()) {
             player.getCurrentTimeline().getWindow(player.getCurrentWindowIndex(), window);
         }
         return window.windowStartTimeMs + currentPosition;
@@ -830,7 +838,6 @@ class ReactExoplayerView extends FrameLayout implements
     private void videoLoaded() {
         if (loadVideoStarted) {
             if (currentlyInRetry && youboraPlugin != null && youboraPlugin.getAdapter() != null) {
-                Log.d("saffar", "videoLoaded: ");
                 youboraPlugin.getAdapter().registerListeners();
                 youboraPlugin.fireInit();
             }
@@ -843,7 +850,17 @@ class ReactExoplayerView extends FrameLayout implements
             int width = videoFormat != null ? videoFormat.width : 0;
             int height = videoFormat != null ? videoFormat.height : 0;
             String trackId = videoFormat != null ? videoFormat.id : "-1";
-            eventEmitter.load(player.getDuration(), player.getCurrentPosition(), width, height,
+
+            long duration = player.getDuration();
+            long pos = player.getCurrentPosition();
+            if (googleDai != null) {
+                duration = googleDai.getContentTime(duration);
+                pos = googleDai.getContentTime(pos);
+
+                googleDai.emitCuepointsChanged();
+            }
+
+            eventEmitter.load(duration, pos, width, height,
                     getAudioTrackInfo(), getTextTrackInfo(), getVideoTrackInfo(), trackId);
         }
     }
@@ -959,7 +976,12 @@ class ReactExoplayerView extends FrameLayout implements
 
     @Override
     public void onSeekProcessed() {
-        eventEmitter.seek(player.getCurrentPosition(), seekTime);
+        long pos = player.getCurrentPosition();
+        if (googleDai != null) {
+            pos = googleDai.getContentTime(pos);
+            seekTime = googleDai.getContentTime(seekTime);
+        }
+        eventEmitter.seek(pos, seekTime);
         seekTime = C.TIME_UNSET;
     }
 
@@ -1018,15 +1040,15 @@ class ReactExoplayerView extends FrameLayout implements
         if (isBehindLiveWindow(e)) {
             // retry after 5 seconds
             new Handler().postDelayed(
-                new Runnable() {
-                    public void run() {
-                        if (player != null) {
-                            currentlyInRetry = true; // to disable to youbora
-                            clearResumePosition();
-                            initializePlayer();
+                    new Runnable() {
+                        public void run() {
+                            if (player != null) {
+                                currentlyInRetry = true; // to disable to youbora
+                                clearResumePosition();
+                                initializePlayer();
+                            }
                         }
-                    }
-                }, 5000);
+                    }, 5000);
         } else {
             updateResumePosition();
         }
@@ -1082,25 +1104,28 @@ class ReactExoplayerView extends FrameLayout implements
 
             if (!isAdsSourceEqual) {
                 if (ads != null) {
-                    googleDai = new GoogleDai(themedReactContext, this, ads, uri);
+                    this.srcUri = null;
+                    googleDai = new GoogleDai(themedReactContext, language,this, eventEmitter, ads, uri);
                 } else {
+                    googleDai = null;
                     reloadSource();
                 }
             } else if (!isSourceEqual) {
+                googleDai = null;
                 reloadSource();
             }
         }
     }
 
     public void clearSrc() {
-        if (srcUri != null) {
+        if (player != null) {
             player.stop(true);
-            this.srcUri = null;
-            this.extension = null;
-            this.requestHeaders = null;
-            this.mediaDataSourceFactory = null;
-            clearResumePosition();
         }
+        this.srcUri = null;
+        this.extension = null;
+        this.requestHeaders = null;
+        this.mediaDataSourceFactory = null;
+        clearResumePosition();
     }
 
     public void setProgressUpdateInterval(final float progressUpdateInterval) {
@@ -1531,5 +1556,9 @@ class ReactExoplayerView extends FrameLayout implements
     public void setAdsSrc(String src) {
         this.srcUri = Uri.parse(src);
         reloadSource();
+    }
+
+    public void setLanguage(String lang) {
+        this.language = lang;
     }
 }

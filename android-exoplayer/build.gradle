@@ -47,4 +47,5 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:${OKHTTP_VERSION}'
 
     implementation "com.nicepeopleatwork:exoplayer-adapter:6.7.23"
+    implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.26.0'
 }

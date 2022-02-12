@@ -118,6 +118,8 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_YOUBORA_CONTENT_METADATA_OWNER = "owner";
     private static final String PROP_YOUBORA_CONTENT_METADATA_CONTENT_ID = "content_id";
 
+    private static final String PROP_LANGUAGE = "language";
+
     private ReactExoplayerConfig config;
 
     public ReactExoplayerViewManager(ReactExoplayerConfig config) {
@@ -483,6 +485,11 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         youboraOptions.setContentMetadata(metadataBundle);
 
         videoView.setYouboraParams(youboraOptions);
+    }
+
+    @ReactProp(name = PROP_LANGUAGE)
+    public void setLanguageParams(final ReactExoplayerView videoView, @Nullable String lang){
+        videoView.setLanguage(lang);
     }
 
     private boolean startsWithValidScheme(String uriString) {
