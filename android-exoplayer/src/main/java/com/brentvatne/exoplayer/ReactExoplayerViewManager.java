@@ -107,6 +107,8 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_8 = "contentCustomDimension8";
     private static final String PROP_YOUBORA_RENDITION= "rendition";
     private static final String PROP_YOUBORA_USER_TYPE = "userType";
+    private static final String PROP_YOUBORA_APP_NAME = "appName";
+    private static final String PROP_YOUBORA_RELEASE_VERSION = "releaseVersion";
 
     private static final String PROP_YOUBORA_CONTENT_METADATA = "contentMetadata";
     private static final String PROP_YOUBORA_CONTENT_METADATA_GENRE = "genre";
@@ -399,12 +401,9 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     @ReactProp(name = PROP_YOUBORA_PARAMS)
     public void setYouboraParams(final ReactExoplayerView videoView, @Nullable ReadableMap src) {
         if (src == null){
-            Log.d("saffar", "PROP_YOUBORA_PARAMS: null" );
             videoView.setYouboraParams(null);
             return;
         }
-
-        Log.d("saffar", "PROP_YOUBORA_PARAMS: " + src.toString());
 
         String accountCode = src.hasKey(PROP_YOUBORA_ACCOUNT_CODE) ? src.getString(PROP_YOUBORA_ACCOUNT_CODE) : null;
         String username = src.hasKey(PROP_YOUBORA_USERNAME) ? src.getString(PROP_YOUBORA_USERNAME) : null;
@@ -486,6 +485,9 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         youboraOptions.setUserType(userType);
 
         youboraOptions.setContentMetadata(metadataBundle);
+
+        youboraOptions.setAppName(src.hasKey(PROP_YOUBORA_APP_NAME) ? src.getString(PROP_YOUBORA_APP_NAME) : null);
+        youboraOptions.setAppReleaseVersion(src.hasKey(PROP_YOUBORA_RELEASE_VERSION) ? src.getString(PROP_YOUBORA_RELEASE_VERSION) : null);
 
         videoView.setYouboraParams(youboraOptions);
     }
