@@ -488,6 +488,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
 
         youboraOptions.setAppName(src.hasKey(PROP_YOUBORA_APP_NAME) ? src.getString(PROP_YOUBORA_APP_NAME) : null);
         youboraOptions.setAppReleaseVersion(src.hasKey(PROP_YOUBORA_RELEASE_VERSION) ? src.getString(PROP_YOUBORA_RELEASE_VERSION) : null);
+        youboraOptions.setDeviceCode("AndroidTV");
 
         videoView.setYouboraParams(youboraOptions);
     }
