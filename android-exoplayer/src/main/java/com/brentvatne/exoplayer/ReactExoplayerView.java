@@ -177,7 +177,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     // Youbora
     private static Plugin youboraPlugin = null;
-    private boolean currentlyInRetry = false;
+//    private boolean currentlyInRetry = false;
     private GoogleDai googleDai = null;
 
     // Analytics
@@ -839,11 +839,11 @@ class ReactExoplayerView extends FrameLayout implements
 
     private void videoLoaded() {
         if (loadVideoStarted) {
-            if (currentlyInRetry && youboraPlugin != null && youboraPlugin.getAdapter() != null) {
-                youboraPlugin.getAdapter().registerListeners();
-                youboraPlugin.fireInit();
-            }
-            currentlyInRetry = false;
+//            if (currentlyInRetry && youboraPlugin != null && youboraPlugin.getAdapter() != null) {
+//                youboraPlugin.getAdapter().registerListeners();
+//                youboraPlugin.fireInit();
+//            }
+//            currentlyInRetry = false;
             loadVideoStarted = false;
             setSelectedAudioTrack(audioTrackType, audioTrackValue);
             setSelectedVideoTrack(videoTrackType, videoTrackValue);
@@ -1039,19 +1039,23 @@ class ReactExoplayerView extends FrameLayout implements
         eventEmitter.error(errorString, ex);
         playerNeedsSource = true;
 
-        if (isBehindLiveWindow(e)) {
-            // retry after 5 seconds
-            new Handler().postDelayed(
-                    new Runnable() {
-                        public void run() {
-                            if (player != null) {
-                                currentlyInRetry = true; // to disable to youbora
-                                clearResumePosition();
-                                initializePlayer();
-                            }
-                        }
-                    }, 5000);
-        } else {
+//        if (isBehindLiveWindow(e)) {
+//            // retry after 5 seconds
+//            new Handler().postDelayed(
+//                    new Runnable() {
+//                        public void run() {
+//                            if (player != null) {
+//                                currentlyInRetry = true; // to disable to youbora
+//                                clearResumePosition();
+//                                initializePlayer();
+//                            }
+//                        }
+//                    }, 5000);
+//        } else {
+//            updateResumePosition();
+//        }
+
+        if (!isBehindLiveWindow(e)) {
             updateResumePosition();
         }
     }
@@ -1539,9 +1543,9 @@ class ReactExoplayerView extends FrameLayout implements
 
     @Override // youbora OnWillSendError Listener
     public void willSendRequest(String serviceName, Plugin plugin, Map<String, String> params) {
-        if (!currentlyInRetry){
-            youboraPlugin.getAdapter().unregisterListeners();
-        }
+//        if (!currentlyInRetry){
+//            youboraPlugin.getAdapter().unregisterListeners();
+//        }
     }
 
     @Override // youbora OnWillSendError Listener (not needed)
