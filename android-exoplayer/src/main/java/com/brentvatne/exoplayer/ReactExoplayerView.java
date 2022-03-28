@@ -1120,7 +1120,7 @@ class ReactExoplayerView extends FrameLayout implements
             if (!isAdsSourceEqual) {
                 if (ads != null) {
                     this.srcUri = null;
-                    initGoogleDai();
+                    initGoogleDai(uri);
                 } else {
                     googleDai = null;
                     reloadSource();
@@ -1132,12 +1132,12 @@ class ReactExoplayerView extends FrameLayout implements
         }
     }
 
-    private void initGoogleDai() {
+    private void initGoogleDai(final Uri fallbackUri) {
         ReactExoplayerView self = this;
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                googleDai = new GoogleDai(themedReactContext, language, analyticsParams, self, eventEmitter, adsId, srcUri);
+                googleDai = new GoogleDai(themedReactContext, language, analyticsParams, self, eventEmitter, adsId, fallbackUri);
             }
         },1);
     }
