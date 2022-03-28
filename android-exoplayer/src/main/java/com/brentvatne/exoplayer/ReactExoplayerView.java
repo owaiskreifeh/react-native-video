@@ -431,6 +431,7 @@ class ReactExoplayerView extends FrameLayout implements
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
+            try {
                 if (player == null) {
                     ExoTrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory();
                     trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
@@ -515,6 +516,9 @@ class ReactExoplayerView extends FrameLayout implements
                 initializePlayerControl();
                 setControls(controls);
                 applyModifiers();
+                } catch (Exception e) {
+                    eventEmitter.error("initializePlayer Failed", e);
+                }
             }
         }, 1);
     }
@@ -536,42 +540,47 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     private MediaSource buildMediaSource(Uri uri, String overrideExtension, DrmSessionManager drmSessionManager) {
-        int type = Util.inferContentType(!TextUtils.isEmpty(overrideExtension) ? "." + overrideExtension
-                : uri.getLastPathSegment());
-        switch (type) {
-            case C.TYPE_SS:
-                return new SsMediaSource.Factory(
-                        new DefaultSsChunkSource.Factory(mediaDataSourceFactory),
-                        buildDataSourceFactory(false)
-                ).setDrmSessionManager(drmSessionManager)
-                 .setLoadErrorHandlingPolicy(
-                        config.buildLoadErrorHandlingPolicy(minLoadRetryCount)
-                ).createMediaSource(uri);
-            case C.TYPE_DASH:
-                return new DashMediaSource.Factory(
-                        new DefaultDashChunkSource.Factory(mediaDataSourceFactory),
-                        buildDataSourceFactory(false)
-                ).setDrmSessionManager(drmSessionManager)
-                 .setLoadErrorHandlingPolicy(
-                        config.buildLoadErrorHandlingPolicy(minLoadRetryCount)
-                ).createMediaSource(uri);
-            case C.TYPE_HLS:
-                return new HlsMediaSource.Factory(
-                        mediaDataSourceFactory
-                ).setDrmSessionManager(drmSessionManager)
-                 .setLoadErrorHandlingPolicy(
-                        config.buildLoadErrorHandlingPolicy(minLoadRetryCount)
-                ).createMediaSource(uri);
-            case C.TYPE_OTHER:
-                return new ProgressiveMediaSource.Factory(
-                        mediaDataSourceFactory
-                ).setDrmSessionManager(drmSessionManager)
-                 .setLoadErrorHandlingPolicy(
-                        config.buildLoadErrorHandlingPolicy(minLoadRetryCount)
-                ).createMediaSource(uri);
-            default: {
-                throw new IllegalStateException("Unsupported type: " + type);
+        String contentExtension = overrideExtension != null && !TextUtils.isEmpty(overrideExtension) ? "." + overrideExtension : uri.getLastPathSegment();
+
+        if(contentExtension != null) {
+            int type = Util.inferContentType(contentExtension);
+            switch (type) {
+                case C.TYPE_SS:
+                    return new SsMediaSource.Factory(
+                            new DefaultSsChunkSource.Factory(mediaDataSourceFactory),
+                            buildDataSourceFactory(false)
+                    ).setDrmSessionManager(drmSessionManager)
+                            .setLoadErrorHandlingPolicy(
+                                    config.buildLoadErrorHandlingPolicy(minLoadRetryCount)
+                            ).createMediaSource(uri);
+                case C.TYPE_DASH:
+                    return new DashMediaSource.Factory(
+                            new DefaultDashChunkSource.Factory(mediaDataSourceFactory),
+                            buildDataSourceFactory(false)
+                    ).setDrmSessionManager(drmSessionManager)
+                            .setLoadErrorHandlingPolicy(
+                                    config.buildLoadErrorHandlingPolicy(minLoadRetryCount)
+                            ).createMediaSource(uri);
+                case C.TYPE_HLS:
+                    return new HlsMediaSource.Factory(
+                            mediaDataSourceFactory
+                    ).setDrmSessionManager(drmSessionManager)
+                            .setLoadErrorHandlingPolicy(
+                                    config.buildLoadErrorHandlingPolicy(minLoadRetryCount)
+                            ).createMediaSource(uri);
+                case C.TYPE_OTHER:
+                    return new ProgressiveMediaSource.Factory(
+                            mediaDataSourceFactory
+                    ).setDrmSessionManager(drmSessionManager)
+                            .setLoadErrorHandlingPolicy(
+                                    config.buildLoadErrorHandlingPolicy(minLoadRetryCount)
+                            ).createMediaSource(uri);
+                default: {
+                    throw new IllegalStateException("Unsupported type: " + type);
+                }
             }
+        } else {
+            throw new IllegalStateException("invalid content extension, overrideExtension: " + overrideExtension + " uri.getLastPathSegment(): "+ uri.getLastPathSegment());
         }
     }
 
