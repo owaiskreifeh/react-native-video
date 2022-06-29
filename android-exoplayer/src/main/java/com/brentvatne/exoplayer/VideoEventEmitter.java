@@ -49,6 +49,7 @@ class VideoEventEmitter {
     private static final String EVENT_AUDIO_FOCUS_CHANGE = "onAudioFocusChanged";
     private static final String EVENT_PLAYBACK_RATE_CHANGE = "onPlaybackRateChange";
     private static final String EVENT_AD_EVENT = "onAdEvent";
+    private static final String EVENT_AD_EVENT_TRACKER = "onAdEventTracking";
 
     static final String[] Events = {
             EVENT_LOAD_START,
@@ -72,6 +73,7 @@ class VideoEventEmitter {
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
             EVENT_AD_EVENT,
+            EVENT_AD_EVENT_TRACKER
     };
 
     @Retention(RetentionPolicy.SOURCE)
@@ -97,6 +99,7 @@ class VideoEventEmitter {
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
             EVENT_AD_EVENT,
+            EVENT_AD_EVENT_TRACKER
     })
     @interface VideoEvents {
     }
@@ -316,6 +319,12 @@ class VideoEventEmitter {
         event.putString("type", type);
         event.putMap("data", data);
         receiveEvent(EVENT_AD_EVENT, event);
+    }
+
+    public void adEventTracking(double pos) {
+        WritableMap event = Arguments.createMap();
+        event.putDouble("currentTime", pos);
+        receiveEvent(EVENT_AD_EVENT_TRACKER, event);
     }
 
     private void receiveEvent(@VideoEvents String type, WritableMap event) {
