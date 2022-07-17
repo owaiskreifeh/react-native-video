@@ -72,6 +72,8 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
 
+import java.util.HashSet;
+import java.util.Set;
 import org.json.JSONObject;
 
 import java.net.CookieHandler;
@@ -215,7 +217,7 @@ class ReactExoplayerView extends FrameLayout implements
                         long pos = player.getCurrentPosition();
                         long duration = player.getDuration();
                         if (adsBreakPoints != null) {
-                            
+
                         for (int i = 0; i < adsBreakPoints.size(); i++) {
                             final ReadableMap arg_object = adsBreakPoints.getMap(i);
                             final long adTime = (long) arg_object.getDouble("duration");
@@ -224,13 +226,15 @@ class ReactExoplayerView extends FrameLayout implements
                             final boolean played = arg_object.getBoolean("played");
                             final ReadableArray ads = arg_object.getArray("ads");
 
-                                if(Math.abs(startTime - pos) <= 400 && played) {
+                                if(Math.abs(startTime - pos) <= 1000 && played) {
                                     player.seekTo(endTime);
                                     break;
                                 }
 
                                 if (Math.abs(startTime - pos) <= 200 && !played ) {
-                                    eventEmitter.adEvent("AdBreakStarted", null);
+                                    WritableMap eventData = Arguments.createMap();
+                                    eventData.putInt("index", i);
+                                    eventEmitter.adEvent("AdBreakStarted", eventData);
                                 }
 
                                 // to end the AD
@@ -266,6 +270,7 @@ class ReactExoplayerView extends FrameLayout implements
                                     }
                                 }
                             }
+                            eventEmitter.adEventTracking(pos);
                         }
 
                         if (adsBreakPoints != null) {
@@ -1227,8 +1232,8 @@ class ReactExoplayerView extends FrameLayout implements
 
                     for (int i = 0; i < adsBreakPoints.size(); i++) {
                         final ReadableMap arg_object = adsBreakPoints.getMap(i);
-                        final double adTime = arg_object.getDouble("start");
-                        writableArrayOfCuePoints.pushDouble(adTime / duration * 100);
+                        final double adStartTime = arg_object.getDouble("start");
+                        writableArrayOfCuePoints.pushDouble(adStartTime / duration * 100);
                     }
 
                     WritableMap eventData = Arguments.createMap();
@@ -1651,7 +1656,7 @@ class ReactExoplayerView extends FrameLayout implements
 
 
     public void setYouboraParams(Options youboraOptions) {
-        if (youboraOptions == null){
+        if (youboraOptions == null) {
             if (youboraPlugin != null) {
                 youboraPlugin.removeAdapter();
                 youboraPlugin.removeOnWillSendErrorListener(this);
@@ -1718,3 +1723,4 @@ class ReactExoplayerView extends FrameLayout implements
         }
     }
 }
+
