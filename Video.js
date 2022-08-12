@@ -120,6 +120,12 @@ export default class Video extends Component {
     }
   };
 
+  _onAdEventTracking = (event) => {
+    if(this.props.onAdEventTracking) {
+      this.props.onAdEventTracking(event.nativeEvent);
+    }
+  }
+
   _onError = (event) => {
     if (this.props.onError) {
       this.props.onError(event.nativeEvent);
@@ -320,6 +326,7 @@ export default class Video extends Component {
       onVideoLoad: this._onLoad,
       onVideoIdle: this._onIdle,
       onAdEvent: this._onAdEvent,
+      onAdEventTracking: this._onAdEventTracking,
       onVideoError: this._onError,
       onVideoProgress: this._onProgress,
       onVideoSeek: this._onSeek,
