@@ -26,9 +26,6 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ThemedReactContext;
-import com.google.ads.interactivemedia.pal.ConsentSettings;
-import com.google.ads.interactivemedia.pal.NonceLoader;
-import com.google.ads.interactivemedia.pal.NonceManager;
 import com.google.ads.interactivemedia.v3.api.player.VideoStreamPlayer;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
@@ -59,6 +56,7 @@ import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
 import com.google.android.exoplayer2.source.dash.manifest.DashManifest;
+import com.google.android.exoplayer2.source.hls.HlsManifest;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource;
@@ -109,10 +107,6 @@ class ReactExoplayerView extends FrameLayout implements
         DEFAULT_COOKIE_MANAGER = new CookieManager();
         DEFAULT_COOKIE_MANAGER.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
     }
-
-    private NonceLoader nonceLoader;
-    private NonceManager nonceManager = null;
-    private ConsentSettings consentSettings;
 
     private ReactExoplayerView videoPlayer;
     private final VideoEventEmitter eventEmitter;
@@ -180,8 +174,7 @@ class ReactExoplayerView extends FrameLayout implements
     private String drmLicenseUrl = null;
     private String[] drmLicenseHeader = null;
     private boolean controls;
-    private long firstCurrentTime = 0;
-    long dashStartTime = 0;
+    long firstLiveStartTime = 0;
 
     // \ End props
 
@@ -219,25 +212,21 @@ class ReactExoplayerView extends FrameLayout implements
                             && player.getPlaybackState() == Player.STATE_READY
                             && player.getPlayWhenReady()
                     ) {
-
                         long pos = player.getCurrentPosition();
                         long duration = player.getDuration();
                         long _pos = player.getCurrentPosition();
-                        if(adsBreakPoints != null && player.getCurrentManifest() != null && isDrm  && isLive) {
-                            if(firstCurrentTime == 0) {
-                                firstCurrentTime = player.getCurrentPosition() / 1000;
-                            }
+
+                        if(adsBreakPoints != null && player.getCurrentManifest() != null && isDrm  && isLive && player != null) {
                             DashManifest dashManifest = (DashManifest) player.getCurrentManifest();
-
-//                            if(dashStartTime == 0) {
-//                                dashStartTime = dashManifest.getPeriod(0).startMs;
-//                            }
-
-                            _pos =  dashManifest.getPeriod(dashManifest.getPeriodCount() - 1).startMs + (long) ((player.getCurrentPosition() / 1000));
+                            _pos = dashManifest.getPeriod(0).startMs + (long) (((player.getCurrentPosition()) / 1000));
                         } else {
-                            _pos = (long) Math.floor(_pos / 1000);
+                            _pos = (long) Math.floor(_pos  / 1000);
                         }
 
+//                        Log.d("sleman asdasd", player.getCurrentPosition() + " ");
+                        Timeline.Window window = player.getCurrentTimeline().getWindow(player.getCurrentWindowIndex(), new Timeline.Window());
+//                            Log.d("sleman sleman sleman", dashManifest.getPeriod(0).startMs + " ");
+                        Log.d("sleman pos", player.getCurrentPosition() - window.getDefaultPositionMs() + " ");
 
                         if (adsBreakPoints != null) {
                             for (int i = 0; i < adsBreakPoints.size(); i++) {
@@ -255,16 +244,18 @@ class ReactExoplayerView extends FrameLayout implements
                                     endTime = startTime + adTime;
                                 } else {
                                     startTime = (long) Math.floor(arg_object.getDouble("start"));
-                                    endTime = (long) Math.floor(arg_object.getDouble("end")) / 1000;
+                                    endTime = (long) Math.floor(arg_object.getDouble("end"));
                                 }
 
-                                if(startTime == _pos  && played && !isLive) {
-                                    player.seekTo(endTime);
+
+                                if(startTime - 1 == _pos  && played && !isLive) {
+                                    player.seekTo(endTime * 1000 + 1000);
                                     break;
                                 }
 
 
                                 if (startTime == _pos && !started ) {
+                                    Log.d("sleman", "sleman started");
                                     WritableMap eventData = Arguments.createMap();
                                     eventData.putInt("index", i);
                                     eventEmitter.adEvent("AdBreakStarted", eventData);
@@ -279,7 +270,8 @@ class ReactExoplayerView extends FrameLayout implements
                                     eventEmitter.adEvent("AdBreakEnded", eventData);
 
                                     if(snapBackTimeMs > 0 && !isLive) {
-                                        player.seekTo(getStreamTime(snapBackTimeMs));
+                                        Log.d("sleman snapBackTimeMs", snapBackTimeMs + " ");
+                                        player.seekTo(snapBackTimeMs);
                                         snapBackTimeMs = 0;
                                     }
                                     break;
@@ -293,13 +285,10 @@ class ReactExoplayerView extends FrameLayout implements
                                         long adStartTime = (long) (adObject.getDouble("startTimeInSeconds"));
                                         long adDuration =  (long) (adObject.getDouble("durationInSeconds"));
                                         long adEnding = (adStartTime + adDuration);
-
-
                                         if(player.getCurrentManifest() != null && isDrm  && isLive) {
 
                                             adStartTime = (long) (adObject.getDouble("startTimeInSeconds") * 1000);
                                             adEnding = (adStartTime + adDuration);
-
                                             if (adStartTime <= _pos && _pos <= adEnding) {
 
                                                 WritableMap eventData = Arguments.createMap();
@@ -313,8 +302,7 @@ class ReactExoplayerView extends FrameLayout implements
                                         } else {
 //                                            double newPos = (double) _pos / 1000 ;
 
-                                            if (adStartTime <= _pos && _pos <= adEnding) {
-
+                                            if (adStartTime <= _pos && _pos < adEnding) {
                                                 WritableMap eventData = Arguments.createMap();
                                                 eventData.putInt("adProgress", (int) Math.floor(_pos - adStartTime));
                                                 eventData.putString("progress",  (((_pos - adStartTime * 1.0) / adDuration) * 100) + "%");
@@ -1108,28 +1096,20 @@ class ReactExoplayerView extends FrameLayout implements
 
     @Override
     public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
-//        if(!isDrm  && isLive) {
-//            HlsManifest hlsManifest = (HlsManifest) manifest;
-//
-//            for(int i = 0;  i < hlsManifest.mediaPlaylist.segments.size(); i++) {
-//                HlsMediaPlaylist.Segment segment = hlsManifest.mediaPlaylist.segments.get(i);
-//                Log.d("sleman segment", "Sengment URL: " + segment.url);
-//
-//            }
-//
-//            for(int j = 0; j < hlsManifest.mediaPlaylist.tags.size(); j++) {
-//                String tag = hlsManifest.mediaPlaylist.tags.get(j);
-//                Log.d("sleman tags", tag);
-//
-////                    if (tagWithSCTE > -1) {
-////                        val line = hlsManifest.mediaPlaylist.tags[i]
-////                        Log.i("autolog", "line: " + line)
-////                    }
-//            }
-//
-//        } else if(isDrm  && isLive) {
-//            DashManifest dashManifest = (DashManifest) manifest;
-//        }
+        if(!isDrm  && isLive && timeline != null && manifest != null) {
+            HlsManifest hlsManifest = (HlsManifest) manifest;
+
+            for(int j = 0; j < hlsManifest.mediaPlaylist.tags.size(); j++) {
+                String tag = hlsManifest.mediaPlaylist.tags.get(j);
+                if(tag.contains("#EXT-X-DATERANGE")) {
+                    eventEmitter.onReadScteMarker();
+                }
+            }
+
+        } else if(isDrm  && isLive && timeline != null && manifest != null) {
+            DashManifest dashManifest = (DashManifest) manifest;
+            Log.d("sleman", dashManifest.getPeriod(dashManifest.getPeriodCount() - 1).id);
+        }
 
     }
 
@@ -1316,7 +1296,7 @@ class ReactExoplayerView extends FrameLayout implements
 
                     for (int i = 0; i < adsBreakPoints.size(); i++) {
                         final ReadableMap arg_object = adsBreakPoints.getMap(i);
-                        final double adStartTime = arg_object.getDouble("start");
+                        final double adStartTime = ((long)arg_object.getDouble("start")) * 1000;
                         writableArrayOfCuePoints.pushDouble(adStartTime / duration * 100);
                     }
 
@@ -1337,9 +1317,9 @@ class ReactExoplayerView extends FrameLayout implements
         if(adsBreakPoints != null) {
             for (int i = 0; i < adsBreakPoints.size(); i++) {
                 final ReadableMap arg_object = adsBreakPoints.getMap(i);
-                final long adTime = (long) arg_object.getDouble("duration");
-                final long startTime = (long) arg_object.getDouble("start");
-                final long endTime = (long) arg_object.getDouble("end");
+                final long adTime = ((long) arg_object.getDouble("duration")) * 1000;
+                final long startTime = ((long) arg_object.getDouble("start")) * 1000;
+                final long endTime = ((long) arg_object.getDouble("end")) * 1000;
 
                 if (endTime >= time && startTime <= time) {
                     contentTime = startTime;
@@ -1359,14 +1339,15 @@ class ReactExoplayerView extends FrameLayout implements
         if(adsBreakPoints != null) {
             for (int i = 0; i < adsBreakPoints.size(); i++) {
                 final ReadableMap arg_object = adsBreakPoints.getMap(i);
-                final long adTime = (long) arg_object.getDouble("duration");
-                final long startTime = (long) arg_object.getDouble("start");
+                final long adTime = ((long) arg_object.getDouble("duration")) * 1000;
+                final long startTime = ((long) arg_object.getDouble("start")) * 1000;
 
                 if (startTime <= contentTime) {
                     contentTime = contentTime + adTime + 1000;
                 }
             }
         }
+        Log.d("sleman contentTime", contentTime + " ");
         return contentTime;
     }
 
@@ -1577,12 +1558,11 @@ class ReactExoplayerView extends FrameLayout implements
     public void seekTo(long positionMs) {
         if (player != null) {
             if (adsBreakPoints.size() > 0) {
-                positionMs = positionMs == 0 ? 0 : (long) Math.floor(positionMs / 1000);
-
-                long seekToTime = (long) Math.floor(positionMs / 1000);
+                positionMs = (long) Math.floor(getStreamTime(positionMs));
+                long seekToTime = positionMs;
                 for (int i = 0; i < adsBreakPoints.size(); i++) {
                     final ReadableMap arg_object = adsBreakPoints.getMap(i);
-                    final long startTime = (long) arg_object.getDouble("start");
+                    final long startTime = (long) arg_object.getDouble("start") * 1000;
                     final long endTime = (long) arg_object.getDouble("end");
                     final boolean played = arg_object.getBoolean("played");
                     if(positionMs >= startTime && !played) {
@@ -1591,19 +1571,18 @@ class ReactExoplayerView extends FrameLayout implements
 
                 }
 
-                final ReadableMap adObject = adsBreakPoints.getMap(0);
-                final boolean played = adObject.getBoolean("played");
+//                final ReadableMap adObject = adsBreakPoints.getMap(0);
+//                final boolean played = adObject.getBoolean("played");
 
-
-                if(seekToTime != positionMs || (positionMs == 0 && !played)) {
+                if(seekToTime != positionMs) {
                     snapBackTimeMs = positionMs;
                     player.seekTo(seekToTime);
                 } else {
-                    player.seekTo(getStreamTime(seekToTime));
+                    player.seekTo(seekToTime);
                 }
             } else {
                 seekTime = positionMs;
-                player.seekTo(getStreamTime(positionMs));
+                player.seekTo(positionMs);
             }
         }
     }
