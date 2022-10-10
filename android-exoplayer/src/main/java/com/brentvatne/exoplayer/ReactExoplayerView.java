@@ -56,6 +56,9 @@ import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.dash.DashMediaSource;
 import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource;
 import com.google.android.exoplayer2.source.dash.manifest.DashManifest;
+import com.google.android.exoplayer2.source.dash.manifest.Period;
+import com.google.android.exoplayer2.source.dash.manifest.Representation;
+import com.google.android.exoplayer2.source.dash.manifest.SegmentBase;
 import com.google.android.exoplayer2.source.hls.HlsManifest;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
@@ -79,10 +82,13 @@ import com.npaw.youbora.lib6.plugin.Plugin;
 
 import org.json.JSONObject;
 
+import java.lang.reflect.Field;
 import java.net.CookieHandler;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
@@ -141,7 +147,7 @@ class ReactExoplayerView extends FrameLayout implements
     private int minLoadRetryCount = 3;
     private int maxBitRate = 0;
     private long seekTime = C.TIME_UNSET;
-    private boolean cuePointsEmitted = false;
+    private long dashStartTime = 0;
 
 
     private int minBufferMs = DefaultLoadControl.DEFAULT_MIN_BUFFER_MS;
@@ -163,7 +169,7 @@ class ReactExoplayerView extends FrameLayout implements
     private String textTrackType;
     private Dynamic textTrackValue;
     private ReadableArray textTracks;
-    private ReadableArray adsBreakPoints;
+    private ArrayList<AdObject> adsBreakPoints = new ArrayList<AdObject>();
     private boolean disableFocus;
     private boolean preventsDisplaySleepDuringVideoPlayback = true;
     private float mProgressUpdateInterval = 250.0f;
@@ -174,7 +180,7 @@ class ReactExoplayerView extends FrameLayout implements
     private String drmLicenseUrl = null;
     private String[] drmLicenseHeader = null;
     private boolean controls;
-    long firstLiveStartTime = 0;
+    Date joinDate;
 
     // \ End props
 
@@ -215,117 +221,23 @@ class ReactExoplayerView extends FrameLayout implements
                         long pos = player.getCurrentPosition();
                         long duration = player.getDuration();
                         long _pos = player.getCurrentPosition();
+                        if(joinDate == null) {
+                            joinDate = new Date();
+                        }
 
-                        if(adsBreakPoints != null && player.getCurrentManifest() != null && isDrm  && isLive && player != null) {
-                            DashManifest dashManifest = (DashManifest) player.getCurrentManifest();
-                            _pos = dashManifest.getPeriod(0).startMs + (long) (((player.getCurrentPosition()) / 1000));
+                        if (adsBreakPoints != null && player.getCurrentManifest() != null && isDrm && isLive && player != null) {
+                            _pos = dashStartTime + (int) ((new Date().getTime() - joinDate.getTime()) / 1000);
                         } else {
-                            _pos = (long) Math.floor(_pos  / 1000);
+                            _pos = (long) Math.floor(_pos / 1000);
                         }
 
-//                        Log.d("sleman asdasd", player.getCurrentPosition() + " ");
-                        Timeline.Window window = player.getCurrentTimeline().getWindow(player.getCurrentWindowIndex(), new Timeline.Window());
-//                            Log.d("sleman sleman sleman", dashManifest.getPeriod(0).startMs + " ");
-                        Log.d("sleman pos", player.getCurrentPosition() - window.getDefaultPositionMs() + " ");
-
-                        if (adsBreakPoints != null) {
-                            for (int i = 0; i < adsBreakPoints.size(); i++) {
-                                final ReadableMap arg_object = adsBreakPoints.getMap(i);
-                                final long adTime = (long) arg_object.getDouble("duration");
-                                long startTime;
-                                long endTime;
-                                final boolean played = arg_object.getBoolean("played");
-                                final boolean started = arg_object.getBoolean("started");
-                                final ReadableArray ads = arg_object.getArray("ads");
-
-
-                                if(adsBreakPoints != null && player.getCurrentManifest() != null && isDrm  && isLive) {
-                                    startTime = (long) (arg_object.getDouble("start") * 1000);
-                                    endTime = startTime + adTime;
-                                } else {
-                                    startTime = (long) Math.floor(arg_object.getDouble("start"));
-                                    endTime = (long) Math.floor(arg_object.getDouble("end"));
-                                }
-
-
-                                if(startTime - 1 == _pos  && played && !isLive) {
-                                    player.seekTo(endTime * 1000 + 1000);
-                                    break;
-                                }
-
-
-                                if (startTime == _pos && !started ) {
-                                    Log.d("sleman", "sleman started");
-                                    WritableMap eventData = Arguments.createMap();
-                                    eventData.putInt("index", i);
-                                    eventEmitter.adEvent("AdBreakStarted", eventData);
-                                }
-
-                                // to end the AD
-                                if (endTime == _pos && !played) {
-                                    Log.d("sleman", "sleman ended");
-
-                                    WritableMap eventData = Arguments.createMap();
-                                    eventData.putInt("index", i);
-                                    eventEmitter.adEvent("AdBreakEnded", eventData);
-
-                                    if(snapBackTimeMs > 0 && !isLive) {
-                                        Log.d("sleman snapBackTimeMs", snapBackTimeMs + " ");
-                                        player.seekTo(snapBackTimeMs);
-                                        snapBackTimeMs = 0;
-                                    }
-                                    break;
-                                }
-
-                                if(!played) {
-                                    for (int j = 0; j < ads.size(); j++) {
-//                                        Log.d("sleman ads.size()", ads.size() + " ");
-                                        final ReadableMap adObject = ads.getMap(j);
-
-                                        long adStartTime = (long) (adObject.getDouble("startTimeInSeconds"));
-                                        long adDuration =  (long) (adObject.getDouble("durationInSeconds"));
-                                        long adEnding = (adStartTime + adDuration);
-                                        if(player.getCurrentManifest() != null && isDrm  && isLive) {
-
-                                            adStartTime = (long) (adObject.getDouble("startTimeInSeconds") * 1000);
-                                            adEnding = (adStartTime + adDuration);
-                                            if (adStartTime <= _pos && _pos <= adEnding) {
-
-                                                WritableMap eventData = Arguments.createMap();
-                                                eventData.putInt("adProgress", (int) (_pos - adStartTime));
-                                                eventData.putInt("remainingTime", (int) (adEnding - _pos));
-                                                eventData.putInt("currentPosition", j + 1);
-                                                eventData.putInt("totalCount", ads.size());
-                                                eventData.putInt("currentSlot", i);
-                                                eventEmitter.adEvent("AdProgress", eventData);
-                                            }
-                                        } else {
-//                                            double newPos = (double) _pos / 1000 ;
-
-                                            if (adStartTime <= _pos && _pos < adEnding) {
-                                                WritableMap eventData = Arguments.createMap();
-                                                eventData.putInt("adProgress", (int) Math.floor(_pos - adStartTime));
-                                                eventData.putString("progress",  (((_pos - adStartTime * 1.0) / adDuration) * 100) + "%");
-                                                eventData.putInt("remainingTime", (int) Math.floor((adEnding - _pos)));
-                                                eventData.putInt("currentPosition", j + 1);
-                                                eventData.putInt("totalCount", ads.size());
-                                                eventData.putInt("currentSlot", i);
-                                                eventEmitter.adEvent("AdProgress", eventData);
-                                            }
-                                        }
-
-                                    }
-                                }
-                            }
-                            eventEmitter.adEventTracking(_pos);
-                        }
+                        handleSSAI(_pos);
 
                         if (adsBreakPoints != null && !isLive) {
                             pos = getContentTime(pos);
                             duration = getContentTime(duration);
                         }
 
-//                        Log.d("sleman pos after", pos + " ");
                         long bufferedDuration = player.getBufferedPercentage() * player.getDuration() / 100;
                         eventEmitter.progressChanged(pos, bufferedDuration, duration, getPositionInFirstPeriodMsForCurrentWindow(pos));
                         msg = obtainMessage(SHOW_PROGRESS);
@@ -336,6 +248,61 @@ class ReactExoplayerView extends FrameLayout implements
         }
     };
 
+
+    public void handleSSAI(long pos) {
+        if (adsBreakPoints != null) {
+            for (int i = 0; i < adsBreakPoints.size(); i++) {
+                AdObject adObject = adsBreakPoints.get(i);
+
+                // to skip an ad if was played
+                if (adObject.adStart - 1 <= pos && pos <= adObject.adEnd && adObject.played && !isLive) {
+                    player.seekTo(adObject.adEnd * 1000 + 1000);
+                    break;
+                }
+
+                // to start the AD
+                if (adObject.adStart <= pos && !adObject.started) {
+                    WritableMap eventData = Arguments.createMap();
+                    eventData.putInt("index", i);
+                    adObject.started = true;
+                    eventEmitter.adEvent("AdBreakStarted", eventData);
+                }
+
+                // to end the AD
+                if (adObject.adEnd <= pos && !adObject.played) {
+
+                    WritableMap eventData = Arguments.createMap();
+                    eventData.putInt("index", i);
+                    adObject.played = true;
+                    eventEmitter.adEvent("AdBreakEnded", eventData);
+
+                    if (snapBackTimeMs > 0 && !isLive) {
+                        player.seekTo(snapBackTimeMs);
+                        snapBackTimeMs = 0;
+                    }
+                    break;
+                }
+
+                // to send AD progress
+                if (!adObject.played) {
+                    for (int j = 0; j < adObject.slotAds.size(); j++) {
+                        AdObject subAdObject = adObject.slotAds.get(j);
+                        if (subAdObject.adStart <= pos && pos < subAdObject.adEnd) {
+                            WritableMap eventData = Arguments.createMap();
+                            eventData.putInt("adProgress", (int) Math.floor(pos - subAdObject.adStart));
+                            eventData.putString("progress", (((pos - subAdObject.adStart * 1.0) / subAdObject.adDuration) * 100) + "%");
+                            eventData.putInt("remainingTime", (int) Math.floor((subAdObject.adEnd - pos)));
+                            eventData.putInt("currentPosition", j + 1);
+                            eventData.putInt("totalCount", adObject.slotAds.size());
+                            eventData.putInt("currentSlot", i);
+                            eventEmitter.adEvent("AdProgress", eventData);
+                        }
+                    }
+                }
+            }
+            eventEmitter.adEventTracking(pos);
+        }
+    }
 
     public double getPositionInFirstPeriodMsForCurrentWindow(long currentPosition) {
         Timeline.Window window = new Timeline.Window();
@@ -1106,11 +1073,54 @@ class ReactExoplayerView extends FrameLayout implements
                 }
             }
 
-        } else if(isDrm  && isLive && timeline != null && manifest != null) {
+        } else if (isDrm && isLive && manifest != null) {
             DashManifest dashManifest = (DashManifest) manifest;
-            Log.d("sleman", dashManifest.getPeriod(dashManifest.getPeriodCount() - 1).id);
-        }
+            Period latestPeriod = dashManifest.getPeriod(dashManifest.getPeriodCount() - 1);
 
+            if(dashStartTime == 0) {
+                Representation.MultiSegmentRepresentation rep = (Representation.MultiSegmentRepresentation) (latestPeriod.adaptationSets.get(0).representations.get(0));
+                @SuppressLint("PrivateApi") Class<?> multiSegmentRepresentationClass = Representation.MultiSegmentRepresentation.class;
+                @SuppressLint("PrivateApi") Class<?> SegmentBaseClass = SegmentBase.class;
+                @SuppressLint("PrivateApi") Class<?> MultiSegmentBaseClass = SegmentBase.MultiSegmentBase.class;
+                @SuppressLint("PrivateApi") Class<?> SegmentTimelineElementClass = SegmentBase.SegmentTimelineElement.class;
+
+                try {
+                    Field segmentBaseField = multiSegmentRepresentationClass.getDeclaredField("segmentBase");
+                    segmentBaseField.setAccessible(true);
+                    SegmentBase segmentBase = (SegmentBase) segmentBaseField.get(rep);
+                    Field timescaleField = SegmentBaseClass.getDeclaredField("timescale");
+                    Field presentationTimeOffsetField = SegmentBaseClass.getDeclaredField("presentationTimeOffset");
+                    Field segmentTimelineField = MultiSegmentBaseClass.getDeclaredField("segmentTimeline");
+                    timescaleField.setAccessible(true);
+                    presentationTimeOffsetField.setAccessible(true);
+                    segmentTimelineField.setAccessible(true);
+                    List<SegmentBase.SegmentTimelineElement> segmentTimeline = (List<SegmentBase.SegmentTimelineElement>) segmentTimelineField.get(segmentBase);
+
+                    Field startTimeField = SegmentTimelineElementClass.getDeclaredField("startTime");
+                    startTimeField.setAccessible(true);
+
+                    long startTimeValue = startTimeField.getLong(segmentTimeline.get(0));
+                    long timescale = timescaleField.getLong(segmentBase);
+                    long presentationTimeOffset = presentationTimeOffsetField.getLong(segmentBase);
+
+                    if(dashStartTime == 0) {
+                        if(latestPeriod.id.contains("_")) {
+                            dashStartTime = (long) (latestPeriod.startMs / 1000);
+                        } else {
+                            dashStartTime = (long) (latestPeriod.startMs / 1000) + ((startTimeValue - presentationTimeOffset) / timescale) + 10;
+                        }
+                    }
+
+                } catch (NoSuchFieldException | IllegalAccessException e) {
+                    Log.d("error", e + " e");
+                    e.printStackTrace();
+                }
+            }
+
+            if (latestPeriod.id.contains("_") && isLive) {
+                eventEmitter.onReadScteMarker();
+            }
+        }
     }
 
     @Override
@@ -1288,38 +1298,52 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setAdsBreakPoints(ReadableArray adsBreakPoints) {
         if (adsBreakPoints != null && player != null) {
-
+            this.adsBreakPoints.clear();
             long duration = player.getDuration();
-            if (!cuePointsEmitted && duration > 0) {
+            if (duration > 0) {
                 WritableArray writableArrayOfCuePoints = Arguments.createArray();
-                if (adsBreakPoints != null) {
+                for (int i = 0; i < adsBreakPoints.size(); i++) {
+                    final ReadableMap arg_object = adsBreakPoints.getMap(i);
+                    final double adStartTime = (long) arg_object.getDouble("start");
+                    long adDuration = (long) arg_object.getDouble("duration");
+                    long startTime = (long) Math.floor(arg_object.getDouble("start"));
+                    long endTime = (long) Math.floor(arg_object.getDouble("end"));
+                    final boolean played = arg_object.getBoolean("played");
+                    boolean started = arg_object.getBoolean("started");
+                    ReadableArray ads = arg_object.getArray("ads");
+                    ArrayList<AdObject> slotAds = new ArrayList<AdObject>();
 
-                    for (int i = 0; i < adsBreakPoints.size(); i++) {
-                        final ReadableMap arg_object = adsBreakPoints.getMap(i);
-                        final double adStartTime = ((long)arg_object.getDouble("start")) * 1000;
-                        writableArrayOfCuePoints.pushDouble(adStartTime / duration * 100);
+                    for (int j = 0; j < ads.size(); j++) {
+                        final ReadableMap adObject = ads.getMap(j);
+                        long subAdStartTime = (long) (adObject.getDouble("startTimeInSeconds"));
+                        long subAdDuration = (long) (adObject.getDouble("durationInSeconds"));
+                        long subAdEndingTime = (subAdStartTime + subAdDuration);
+                        slotAds.add(new AdObject(subAdStartTime, subAdEndingTime, subAdDuration));
                     }
 
-                    WritableMap eventData = Arguments.createMap();
-                    eventData.putArray("cuePoints", writableArrayOfCuePoints);
-                    cuePointsEmitted = true;
-                    eventEmitter.adEvent("CuePointsChange", eventData);
+                    writableArrayOfCuePoints.pushDouble(adStartTime);
+                    AdObject adObject = new AdObject(startTime, endTime, adDuration, played, started, slotAds);
+                    this.adsBreakPoints.add(adObject);
+
                 }
+
+                WritableMap eventData = Arguments.createMap();
+                eventData.putArray("cuePoints", writableArrayOfCuePoints);
+                eventEmitter.adEvent("CuePointsChange", eventData);
             }
         }
-        this.adsBreakPoints = adsBreakPoints;
 
     }
 
     public long getContentTime(long time) {
 
         long contentTime = time;
-        if(adsBreakPoints != null) {
+        if (adsBreakPoints != null) {
             for (int i = 0; i < adsBreakPoints.size(); i++) {
-                final ReadableMap arg_object = adsBreakPoints.getMap(i);
-                final long adTime = ((long) arg_object.getDouble("duration")) * 1000;
-                final long startTime = ((long) arg_object.getDouble("start")) * 1000;
-                final long endTime = ((long) arg_object.getDouble("end")) * 1000;
+                AdObject adObject = adsBreakPoints.get(i);
+                final long adTime = adObject.adDuration * 1000;
+                final long startTime = adObject.adStart * 1000;
+                final long endTime = adObject.adEnd * 1000;
 
                 if (endTime >= time && startTime <= time) {
                     contentTime = startTime;
@@ -1336,18 +1360,16 @@ class ReactExoplayerView extends FrameLayout implements
 
     public long getStreamTime(long time) {
         long contentTime = time;
-        if(adsBreakPoints != null) {
+        if (adsBreakPoints != null) {
             for (int i = 0; i < adsBreakPoints.size(); i++) {
-                final ReadableMap arg_object = adsBreakPoints.getMap(i);
-                final long adTime = ((long) arg_object.getDouble("duration")) * 1000;
-                final long startTime = ((long) arg_object.getDouble("start")) * 1000;
-
+                AdObject adObject = adsBreakPoints.get(i);
+                final long adTime = adObject.adDuration * 1000;
+                final long startTime = adObject.adStart * 1000;
                 if (startTime <= contentTime) {
                     contentTime = contentTime + adTime + 1000;
                 }
             }
         }
-        Log.d("sleman contentTime", contentTime + " ");
         return contentTime;
     }
 
@@ -1561,20 +1583,14 @@ class ReactExoplayerView extends FrameLayout implements
                 positionMs = (long) Math.floor(getStreamTime(positionMs));
                 long seekToTime = positionMs;
                 for (int i = 0; i < adsBreakPoints.size(); i++) {
-                    final ReadableMap arg_object = adsBreakPoints.getMap(i);
-                    final long startTime = (long) arg_object.getDouble("start") * 1000;
-                    final long endTime = (long) arg_object.getDouble("end");
-                    final boolean played = arg_object.getBoolean("played");
-                    if(positionMs >= startTime && !played) {
-                        seekToTime = startTime;
+                    AdObject adObject = adsBreakPoints.get(i);
+                    long adStartTime = adObject.adStart * 1000;
+
+                    if (positionMs >= adStartTime && !adObject.played) {
+                        seekToTime = adStartTime;
                     }
-
                 }
-
-//                final ReadableMap adObject = adsBreakPoints.getMap(0);
-//                final boolean played = adObject.getBoolean("played");
-
-                if(seekToTime != positionMs) {
+                if (seekToTime != positionMs) {
                     snapBackTimeMs = positionMs;
                     player.seekTo(seekToTime);
                 } else {
@@ -1795,6 +1811,3 @@ class ReactExoplayerView extends FrameLayout implements
         }
     }
 }
-
-
-
