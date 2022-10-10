@@ -150,8 +150,8 @@ class ReactExoplayerView extends FrameLayout implements
     private long dashStartTime = 0;
 
 
-    private int minBufferMs = DefaultLoadControl.DEFAULT_MIN_BUFFER_MS;
-    private int maxBufferMs = DefaultLoadControl.DEFAULT_MAX_BUFFER_MS;
+    private int minBufferMs = 20000;
+    private int maxBufferMs = 20000;
     private int bufferForPlaybackMs = DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS;
     private int bufferForPlaybackAfterRebufferMs = DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS;
 
@@ -226,9 +226,11 @@ class ReactExoplayerView extends FrameLayout implements
                         }
 
                         if (adsBreakPoints != null && player.getCurrentManifest() != null && isDrm && isLive && player != null) {
-                            _pos = dashStartTime + (int) ((new Date().getTime() - joinDate.getTime()) / 1000);
+                            _pos =  dashStartTime +  ((new Date().getTime() - joinDate.getTime()) / 1000);
+                        } else if(adsBreakPoints != null && player.getCurrentManifest() != null && !isDrm && isLive && player != null) {
+                            _pos = ((new Date().getTime() - joinDate.getTime()) / 1000);
                         } else {
-                            _pos = (long) Math.floor(_pos / 1000);
+                            _pos = player.getCurrentPosition() / 1000;
                         }
 
                         handleSSAI(_pos);
@@ -269,7 +271,7 @@ class ReactExoplayerView extends FrameLayout implements
                 }
 
                 // to end the AD
-                if (adObject.adEnd <= pos && !adObject.played) {
+                if (adObject.adEnd == pos && !adObject.played) {
 
                     WritableMap eventData = Arguments.createMap();
                     eventData.putInt("index", i);
@@ -1107,7 +1109,7 @@ class ReactExoplayerView extends FrameLayout implements
                         if(latestPeriod.id.contains("_")) {
                             dashStartTime = (long) (latestPeriod.startMs / 1000);
                         } else {
-                            dashStartTime = (long) (latestPeriod.startMs / 1000) + ((startTimeValue - presentationTimeOffset) / timescale) + 10;
+                            dashStartTime = (latestPeriod.startMs / 1000) + ((startTimeValue - presentationTimeOffset) / timescale) + 40;
                         }
                     }
 
@@ -1312,7 +1314,6 @@ class ReactExoplayerView extends FrameLayout implements
                     boolean started = arg_object.getBoolean("started");
                     ReadableArray ads = arg_object.getArray("ads");
                     ArrayList<AdObject> slotAds = new ArrayList<AdObject>();
-
                     for (int j = 0; j < ads.size(); j++) {
                         final ReadableMap adObject = ads.getMap(j);
                         long subAdStartTime = (long) (adObject.getDouble("startTimeInSeconds"));
