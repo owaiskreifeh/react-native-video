@@ -263,7 +263,7 @@ class ReactExoplayerView extends FrameLayout implements
                 }
 
                 // to start the AD
-                if (adObject.adStart <= pos && !adObject.started) {
+                if (adObject.adStart == pos && !adObject.started) {
                     WritableMap eventData = Arguments.createMap();
                     eventData.putInt("index", i);
                     adObject.started = true;
@@ -271,7 +271,7 @@ class ReactExoplayerView extends FrameLayout implements
                 }
 
                 // to end the AD
-                if (adObject.adEnd <= pos && !adObject.played) {
+                if (adObject.adEnd == pos && !adObject.played) {
 
                     WritableMap eventData = Arguments.createMap();
                     eventData.putInt("index", i);
@@ -1107,7 +1107,7 @@ class ReactExoplayerView extends FrameLayout implements
 
                     if(dashStartTime == 0) {
                         if(latestPeriod.id.contains("_")) {
-                            dashStartTime = (long) (latestPeriod.startMs / 1000);
+                            dashStartTime = (latestPeriod.startMs / 1000);
                         } else {
                             dashStartTime = (latestPeriod.startMs / 1000) + ((startTimeValue - presentationTimeOffset) / timescale) + 40;
                         }
