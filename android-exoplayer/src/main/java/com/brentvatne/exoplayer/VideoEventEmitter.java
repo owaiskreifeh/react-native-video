@@ -1,7 +1,8 @@
 package com.brentvatne.exoplayer;
 
-import androidx.annotation.StringDef;
 import android.view.View;
+
+import androidx.annotation.StringDef;
 
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.ReactContext;
@@ -49,6 +50,8 @@ class VideoEventEmitter {
     private static final String EVENT_AUDIO_FOCUS_CHANGE = "onAudioFocusChanged";
     private static final String EVENT_PLAYBACK_RATE_CHANGE = "onPlaybackRateChange";
     private static final String EVENT_AD_EVENT = "onAdEvent";
+    private static final String EVENT_AD_EVENT_TRACKER = "onAdEventTracking";
+    private static final String EVENT_READ_SCTE_MARKER = "onReadScteMarker";
 
     static final String[] Events = {
             EVENT_LOAD_START,
@@ -72,6 +75,8 @@ class VideoEventEmitter {
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
             EVENT_AD_EVENT,
+            EVENT_AD_EVENT_TRACKER,
+            EVENT_READ_SCTE_MARKER
     };
 
     @Retention(RetentionPolicy.SOURCE)
@@ -97,6 +102,8 @@ class VideoEventEmitter {
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
             EVENT_AD_EVENT,
+            EVENT_AD_EVENT_TRACKER,
+            EVENT_READ_SCTE_MARKER
     })
     @interface VideoEvents {
     }
@@ -132,7 +139,7 @@ class VideoEventEmitter {
 
     private static final String EVENT_PROP_TIMED_METADATA = "metadata";
 
-    private static final String EVENT_PROP_BITRATE = "bitrate";   
+    private static final String EVENT_PROP_BITRATE = "bitrate";
 
 
     void setViewId(int viewId) {
@@ -191,7 +198,7 @@ class VideoEventEmitter {
         event.putInt(EVENT_PROP_HEIGHT, height);
         event.putString(EVENT_PROP_TRACK_ID, id);
         receiveEvent(EVENT_BANDWIDTH, event);
-    }    
+    }
 
     void seek(long currentPosition, long seekTime) {
         WritableMap event = Arguments.createMap();
@@ -253,7 +260,7 @@ class VideoEventEmitter {
         WritableArray metadataArray = Arguments.createArray();
 
         for (int i = 0; i < metadata.length(); i++) {
-            
+
             Metadata.Entry entry = metadata.get(i);
 
             if (entry instanceof Id3Frame) {
@@ -278,21 +285,21 @@ class VideoEventEmitter {
                 map.putString("value", value);
 
                 metadataArray.pushMap(map);
-                
+
             } else if (entry instanceof EventMessage) {
-                
+
                 EventMessage eventMessage = (EventMessage) entry;
 
                 if (playerCallback != null) {
                     String eventMessageValue = new String(eventMessage.messageData);
                     playerCallback.onUserTextReceived(eventMessageValue);
                 }
-                
+
                 WritableMap map = Arguments.createMap();
                 map.putString("identifier", eventMessage.schemeIdUri);
                 map.putString("value", eventMessage.value);
                 metadataArray.pushMap(map);
-                
+
             }
         }
 
@@ -316,6 +323,16 @@ class VideoEventEmitter {
         event.putString("type", type);
         event.putMap("data", data);
         receiveEvent(EVENT_AD_EVENT, event);
+    }
+
+    public void adEventTracking(double pos) {
+        WritableMap event = Arguments.createMap();
+        event.putDouble("currentTime", pos);
+        receiveEvent(EVENT_AD_EVENT_TRACKER, event);
+    }
+
+    public void onReadScteMarker() {
+        receiveEvent(EVENT_READ_SCTE_MARKER, null);
     }
 
     private void receiveEvent(@VideoEvents String type, WritableMap event) {

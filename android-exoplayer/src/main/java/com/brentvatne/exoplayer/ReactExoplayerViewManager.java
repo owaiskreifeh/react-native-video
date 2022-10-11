@@ -23,6 +23,7 @@ import com.npaw.youbora.lib6.plugin.Options;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Arrays;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -40,6 +41,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_DRM_HEADERS = "headers";
     private static final String PROP_SRC_HEADERS = "requestHeaders";
     private static final String PROP_RESIZE_MODE = "resizeMode";
+    private static final String PROP_AD_BREAK_POINT = "adsBreakPoints";
     private static final String PROP_REPEAT = "repeat";
     private static final String PROP_SELECTED_AUDIO_TRACK = "selectedAudioTrack";
     private static final String PROP_SELECTED_AUDIO_TRACK_TYPE = "type";
@@ -72,6 +74,8 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_SELECTED_VIDEO_TRACK_VALUE = "value";
     private static final String PROP_HIDE_SHUTTER_VIEW = "hideShutterView";
     private static final String PROP_CONTROLS = "controls";
+    private static final String PROP_IS_DRM = "isDrm";
+    private static final String PROP_IS_LIVE = "isLive";
 
     private static final String PROP_FONT_SIZE_TRACK = "fontSizeTrack";
     private static final String PROP_PADDING_BOTTOM_TRACK = "paddingBottomTrack";
@@ -235,7 +239,6 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     public void setResizeMode(final ReactExoplayerView videoView, final String resizeModeOrdinalString) {
         videoView.setResizeModeModifier(convertToIntDef(resizeModeOrdinalString));
     }
-
     @ReactProp(name = PROP_REPEAT, defaultBoolean = false)
     public void setRepeat(final ReactExoplayerView videoView, final boolean repeat) {
         videoView.setRepeatModifier(repeat);
@@ -288,15 +291,31 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         videoView.setSelectedTextTrack(typeString, value);
     }
 
+    @ReactProp(name = PROP_AD_BREAK_POINT)
+    public void setAdsBreakPoints(final ReactExoplayerView videoView,
+                                  @Nullable ReadableArray adsBreakPoints) {
+        videoView.setAdsBreakPoints(adsBreakPoints);
+    }
+
     @ReactProp(name = PROP_TEXT_TRACKS)
     public void setPropTextTracks(final ReactExoplayerView videoView,
                                   @Nullable ReadableArray textTracks) {
+
         videoView.setTextTracks(textTracks);
     }
 
     @ReactProp(name = PROP_PAUSED, defaultBoolean = false)
     public void setPaused(final ReactExoplayerView videoView, final boolean paused) {
         videoView.setPausedModifier(paused);
+    }
+
+    @ReactProp(name = PROP_IS_DRM, defaultBoolean = false)
+    public void setIsDrm(final ReactExoplayerView videoView, final boolean isDrm) {
+        videoView.setIsDrmModifier(isDrm);
+    }
+    @ReactProp(name = PROP_IS_LIVE, defaultBoolean = false)
+    public void setIsLive(final ReactExoplayerView videoView, final boolean isLive) {
+        videoView.setIsLiveModifier(isLive);
     }
 
     @ReactProp(name = PROP_MUTED, defaultBoolean = false)
