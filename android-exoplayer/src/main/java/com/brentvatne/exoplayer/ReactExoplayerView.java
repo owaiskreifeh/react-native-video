@@ -1413,6 +1413,34 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setSelectedTrack(int trackType, String type, Dynamic value) {
         if (player == null) return;
+        if (!TextUtils.isEmpty(type) && type.equals("maxResolution")) {
+            int maxBitRate = 0;
+            int foundHeight = 0;
+            WritableArray tracks = getVideoTrackInfo();
+
+            // find closest height to value
+            for (int i = 0; i < tracks.size(); i++) {
+                ReadableMap track = tracks.getMap(i);
+                if (
+                    track.getInt("height") >= foundHeight &&
+                    track.getInt("height") <= value.asInt()
+                ) {
+                    foundHeight = track.getInt("height");
+                    break;
+                }
+            }
+            // find the bitRate for the found height
+            for (int i = 0; i < tracks.size(); i++) {
+                ReadableMap track = tracks.getMap(i);
+                if (track.getInt("height") == foundHeight) {
+                    maxBitRate = track.getInt("bitrate");
+                    break;
+                }
+            }
+            setMaxBitRateModifier(maxBitRate);
+            return;
+        }
+
         int rendererIndex = getTrackRendererIndex(trackType);
         if (rendererIndex == C.INDEX_UNSET) {
             return;
