@@ -52,6 +52,7 @@ class VideoEventEmitter {
     private static final String EVENT_AD_EVENT = "onAdEvent";
     private static final String EVENT_AD_EVENT_TRACKER = "onAdEventTracking";
     private static final String EVENT_READ_SCTE_MARKER = "onReadScteMarker";
+    private static final String EVENT_ON_BUFFER_END = "onBufferEnd";
 
     static final String[] Events = {
             EVENT_LOAD_START,
@@ -76,7 +77,8 @@ class VideoEventEmitter {
             EVENT_BANDWIDTH,
             EVENT_AD_EVENT,
             EVENT_AD_EVENT_TRACKER,
-            EVENT_READ_SCTE_MARKER
+            EVENT_READ_SCTE_MARKER,
+            EVENT_ON_BUFFER_END
     };
 
     @Retention(RetentionPolicy.SOURCE)
@@ -103,7 +105,8 @@ class VideoEventEmitter {
             EVENT_BANDWIDTH,
             EVENT_AD_EVENT,
             EVENT_AD_EVENT_TRACKER,
-            EVENT_READ_SCTE_MARKER
+            EVENT_READ_SCTE_MARKER,
+            EVENT_ON_BUFFER_END
     })
     @interface VideoEvents {
     }
@@ -333,6 +336,12 @@ class VideoEventEmitter {
 
     public void onReadScteMarker() {
         receiveEvent(EVENT_READ_SCTE_MARKER, null);
+    }
+
+    public  void onBufferEnd(long time) {
+        WritableMap event = Arguments.createMap();
+        event.putInt("bufferEndTime",(int) time);
+        receiveEvent(EVENT_ON_BUFFER_END, event);
     }
 
     private void receiveEvent(@VideoEvents String type, WritableMap event) {

@@ -180,7 +180,10 @@ class ReactExoplayerView extends FrameLayout implements
     private String drmLicenseUrl = null;
     private String[] drmLicenseHeader = null;
     private boolean controls;
-    Date joinDate;
+    private Date joinDate;
+    private Long bufferingStartTime;
+    private int bufferingTime = 0;
+
 
     // \ End props
 
@@ -509,6 +512,20 @@ class ReactExoplayerView extends FrameLayout implements
         view.measure(MeasureSpec.makeMeasureSpec(getMeasuredWidth(), MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.EXACTLY));
         view.layout(view.getLeft(), view.getTop(), view.getMeasuredWidth(), view.getMeasuredHeight());
+    }
+
+    @Override
+    public void onPlaybackStateChanged(int state) {
+        if (state == Player.STATE_BUFFERING) {
+            bufferingStartTime = new Date().getTime();
+        } else if( state == Player.STATE_READY && bufferingStartTime != null) {
+            bufferingTime += (new Date().getTime() - bufferingStartTime) / 1000;
+            if(bufferingTime >= 30) {
+                eventEmitter.onBufferEnd(bufferingTime);
+                bufferingTime = 0;
+            }
+        }
+        Player.EventListener.super.onPlaybackStateChanged(state);
     }
 
     private void initializePlayer() {
