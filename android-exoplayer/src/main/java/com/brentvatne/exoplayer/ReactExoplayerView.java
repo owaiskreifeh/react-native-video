@@ -92,6 +92,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 @SuppressLint("ViewConstructor")
 class ReactExoplayerView extends FrameLayout implements
@@ -1413,6 +1414,16 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setSelectedTrack(int trackType, String type, Dynamic value) {
         if (player == null) return;
+        if (!TextUtils.isEmpty(type) && type.equals("maxResolution")) {
+            Log.d(TAG, "setSelectedTrack: setting max resolution = " + value.asInt());
+            int closestHeightMatch = getClosestHeightMatch(value.asInt());
+            Log.d(TAG, "setSelectedTrack: found best height = " + closestHeightMatch);
+            int maxBitRate = getBitrateForHeight(closestHeightMatch);
+            Log.d(TAG, "setSelectedTrack: found maxBitRate = " + maxBitRate);
+            setMaxBitRateModifier(maxBitRate);
+            return;
+        }
+
         int rendererIndex = getTrackRendererIndex(trackType);
         if (rendererIndex == C.INDEX_UNSET) {
             return;
@@ -1523,6 +1534,51 @@ class ReactExoplayerView extends FrameLayout implements
             }
         }
         return groupIndex;
+    }
+
+    private void loopThroughTracks(int trackType, Function<Format, Dynamic> callback){
+        MappingTrackSelector.MappedTrackInfo info = trackSelector.getCurrentMappedTrackInfo();
+        int index = getTrackRendererIndex(trackType);
+        if (info == null || index == C.INDEX_UNSET) {
+            return;
+        }
+        // Get all track groups, in dash for example there would be multiple groups for audio
+        TrackGroupArray groups = info.getTrackGroups(index);
+        // loop through each group
+        for (int i = 0; i < groups.length; ++i) {
+            TrackGroup group = groups.get(i);
+            // loop through each track in group
+            for (int trackIndex = 0; trackIndex < group.length; trackIndex++) {
+                // format is simply a track of the selected type (audio/video/text/...)
+                Format format = group.getFormat(trackIndex);
+                callback.apply(format); // invoking callback
+            }
+        }
+    }
+
+    private int getClosestHeightMatch(int preferredHeight) {
+        // check why: @link: https://stackoverflow.com/a/61075832
+        final int[] foundHeight = {0}; // converting int into final int[] with single item to bypass lambda
+        loopThroughTracks(C.TRACK_TYPE_VIDEO, format -> {
+            int height = format.height;
+            // closest height match is the closest available height less than or equal to preferredHeight
+            if (height >= foundHeight[0] && height <= preferredHeight) {
+                foundHeight[0] = height;
+            }
+            return null;
+        });
+        return foundHeight[0] >= 0 ? foundHeight[0] : preferredHeight;
+    }
+
+    private int getBitrateForHeight(int height) {
+        final int[] foundBitrate = {0}; // converting int into final int[] with single item to bypass lambda
+        loopThroughTracks(C.TRACK_TYPE_VIDEO, format -> {
+            if (format.height == height) {
+                foundBitrate[0] = format.bitrate;
+            }
+            return null;
+        });
+        return Math.max(foundBitrate[0], 0);
     }
 
     public void setSelectedVideoTrack(String type, Dynamic value) {
