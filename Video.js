@@ -131,6 +131,12 @@ export default class Video extends Component {
       this.props.onReadScteMarker(event.nativeEvent)
     }
   }
+
+  _onBufferEnd = (event) => {
+    if(this.props.onBufferEnd) {
+      this.props.onBufferEnd(event.nativeEvent);
+    }
+  }
   
 
   _onError = (event) => {
@@ -335,6 +341,7 @@ export default class Video extends Component {
       onAdEvent: this._onAdEvent,
       onAdEventTracking: this._onAdEventTracking,
       onReadScteMarker: this._onReadScteMarker,
+      onBufferEnd: this._onBufferEnd,
       onVideoError: this._onError,
       onVideoProgress: this._onProgress,
       onVideoSeek: this._onSeek,
