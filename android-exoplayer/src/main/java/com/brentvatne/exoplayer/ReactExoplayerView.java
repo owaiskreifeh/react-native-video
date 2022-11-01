@@ -1590,7 +1590,7 @@ class ReactExoplayerView extends FrameLayout implements
     private int getBitrateForHeight(int height) {
         final int[] foundBitrate = {0}; // converting int into final int[] with single item to bypass lambda
         loopThroughTracks(C.TRACK_TYPE_VIDEO, format -> {
-            if (format.height == height) {
+            if (format.height == height && format.bitrate > foundBitrate[0]) {
                 foundBitrate[0] = format.bitrate;
             }
             return null;
