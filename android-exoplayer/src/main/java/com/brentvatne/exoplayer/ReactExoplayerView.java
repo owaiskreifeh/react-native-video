@@ -184,6 +184,7 @@ class ReactExoplayerView extends FrameLayout implements
     private Date joinDate;
     private Long bufferingStartTime;
     private int bufferingTime = 0;
+    private Long firstWindowPosition;
 
 
     // \ End props
@@ -232,7 +233,7 @@ class ReactExoplayerView extends FrameLayout implements
                         if (adsBreakPoints != null && player.getCurrentManifest() != null && isDrm && isLive && player != null) {
                             _pos =  dashStartTime +  ((new Date().getTime() - joinDate.getTime()) / 1000);
                         } else if(adsBreakPoints != null && player.getCurrentManifest() != null && !isDrm && isLive && player != null) {
-                            _pos = ((new Date().getTime() - joinDate.getTime()) / 1000);
+                            _pos = ((new Date().getTime() - joinDate.getTime()) / 1000) + firstWindowPosition ;
                         } else {
                             _pos = player.getCurrentPosition() / 1000;
                         }
@@ -1085,9 +1086,13 @@ class ReactExoplayerView extends FrameLayout implements
     public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
         if(!isDrm  && isLive && timeline != null && manifest != null) {
             HlsManifest hlsManifest = (HlsManifest) manifest;
-
+            Timeline.Window currentWindow = timeline.getWindow(0, new Timeline.Window());
             for(int j = 0; j < hlsManifest.mediaPlaylist.tags.size(); j++) {
                 String tag = hlsManifest.mediaPlaylist.tags.get(j);
+
+                if(firstWindowPosition == null) {
+                    firstWindowPosition = currentWindow.getDefaultPositionUs() / 1000000;
+                }
                 if(tag.contains("#EXT-X-DATERANGE")) {
                     eventEmitter.onReadScteMarker();
                 }
