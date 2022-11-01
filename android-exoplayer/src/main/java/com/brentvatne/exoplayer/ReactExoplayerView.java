@@ -1091,16 +1091,17 @@ class ReactExoplayerView extends FrameLayout implements
                 String tag = hlsManifest.mediaPlaylist.tags.get(j);
 
                 if(firstWindowPosition == null) {
-                    firstWindowPosition = currentWindow.getDefaultPositionUs() / 1000000;
+                    firstWindowPosition = currentWindow.getDefaultPositionMs() / 1000;
                 }
                 if(tag.contains("#EXT-X-DATERANGE")) {
                     eventEmitter.onReadScteMarker();
                 }
             }
 
-        } else if (isDrm && isLive && manifest != null) {
+        } else if (isDrm && isLive && manifest != null && timeline != null) {
             DashManifest dashManifest = (DashManifest) manifest;
             Period latestPeriod = dashManifest.getPeriod(dashManifest.getPeriodCount() - 1);
+            Timeline.Window currentWindow = timeline.getWindow(0, new Timeline.Window());
 
             if(dashStartTime == 0) {
                 Representation.MultiSegmentRepresentation rep = (Representation.MultiSegmentRepresentation) (latestPeriod.adaptationSets.get(0).representations.get(0));
@@ -1128,12 +1129,10 @@ class ReactExoplayerView extends FrameLayout implements
                     long timescale = timescaleField.getLong(segmentBase);
                     long presentationTimeOffset = presentationTimeOffsetField.getLong(segmentBase);
 
-                    if(dashStartTime == 0) {
-                        if(latestPeriod.id.contains("_")) {
-                            dashStartTime = (latestPeriod.startMs / 1000);
-                        } else {
-                            dashStartTime = (latestPeriod.startMs / 1000) + ((startTimeValue - presentationTimeOffset) / timescale) + 40;
-                        }
+                    if(latestPeriod.id.contains("_")) {
+                        dashStartTime = (latestPeriod.startMs / 1000);
+                    } else {
+                        dashStartTime = (latestPeriod.startMs / 1000) + ((startTimeValue - presentationTimeOffset) / timescale) + (currentWindow.getDefaultPositionMs() / 1000);
                     }
 
                 } catch (NoSuchFieldException | IllegalAccessException e) {
