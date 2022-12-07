@@ -11,9 +11,16 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
 
+import java.io.IOException;
+import java.util.Map;
+
+import okhttp3.Call;
+import okhttp3.HttpUrl;
+import okhttp3.Interceptor;
 import okhttp3.JavaNetCookieJar;
 import okhttp3.OkHttpClient;
-import java.util.Map;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class DataSourceUtil {
 
@@ -80,15 +87,33 @@ public class DataSourceUtil {
     }
 
     private static HttpDataSource.Factory buildHttpDataSourceFactory(ReactContext context, DefaultBandwidthMeter bandwidthMeter, Map<String, String> requestHeaders) {
-        OkHttpClient client = OkHttpClientProvider.getOkHttpClient();
+        OkHttpClient client = OkHttpClientProvider.getOkHttpClient().newBuilder().addInterceptor(new LoggingInterceptor()).build();
         CookieJarContainer container = (CookieJarContainer) client.cookieJar();
         ForwardingCookieHandler handler = new ForwardingCookieHandler(context);
         container.setCookieJar(new JavaNetCookieJar(handler));
-        OkHttpDataSourceFactory okHttpDataSourceFactory = new OkHttpDataSourceFactory(client, getUserAgent(context), bandwidthMeter);
+        OkHttpDataSourceFactory okHttpDataSourceFactory = new OkHttpDataSourceFactory((Call.Factory) client, getUserAgent(context), bandwidthMeter);
 
         if (requestHeaders != null)
             okHttpDataSourceFactory.getDefaultRequestProperties().set(requestHeaders);
 
         return okHttpDataSourceFactory;
+    }
+}
+
+class LoggingInterceptor implements Interceptor {
+    @Override public Response intercept(Interceptor.Chain chain) throws IOException {
+        Request request = chain.request();
+
+        if(request.url().toString().contains("$Number$")) {
+            HttpUrl newURL = HttpUrl.parse(request.url().toString().replace("$Number$", "0"));
+            Request newRequest = request.newBuilder().url(newURL).build();
+            
+            Response response = chain.proceed(newRequest);
+            return response;
+
+        } else {
+            Response response = chain.proceed(request);
+            return response;
+        }
     }
 }
