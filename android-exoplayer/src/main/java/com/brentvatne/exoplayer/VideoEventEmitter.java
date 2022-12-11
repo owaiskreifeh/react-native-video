@@ -32,6 +32,7 @@ class VideoEventEmitter {
     private static final String EVENT_LOAD = "onVideoLoad";
     private static final String EVENT_ERROR = "onVideoError";
     private static final String EVENT_PROGRESS = "onVideoProgress";
+    private static final String EVENT_UPDATE_SUBTITLE_AND_AUDIO = "onUpdateSubtitleAndAudio";
     private static final String EVENT_BANDWIDTH = "onVideoBandwidthUpdate";
     private static final String EVENT_SEEK = "onVideoSeek";
     private static final String EVENT_END = "onVideoEnd";
@@ -78,7 +79,8 @@ class VideoEventEmitter {
             EVENT_AD_EVENT,
             EVENT_AD_EVENT_TRACKER,
             EVENT_READ_SCTE_MARKER,
-            EVENT_ON_BUFFER_END
+            EVENT_ON_BUFFER_END,
+            EVENT_UPDATE_SUBTITLE_AND_AUDIO
     };
 
     @Retention(RetentionPolicy.SOURCE)
@@ -106,7 +108,8 @@ class VideoEventEmitter {
             EVENT_AD_EVENT,
             EVENT_AD_EVENT_TRACKER,
             EVENT_READ_SCTE_MARKER,
-            EVENT_ON_BUFFER_END
+            EVENT_ON_BUFFER_END,
+            EVENT_UPDATE_SUBTITLE_AND_AUDIO
     })
     @interface VideoEvents {
     }
@@ -332,6 +335,13 @@ class VideoEventEmitter {
         WritableMap event = Arguments.createMap();
         event.putDouble("currentTime", pos);
         receiveEvent(EVENT_AD_EVENT_TRACKER, event);
+    }
+
+    public void updateSubtile (WritableArray audioTracks, WritableArray textTracks) {
+        WritableMap event = Arguments.createMap();
+        event.putArray(EVENT_PROP_AUDIO_TRACKS, audioTracks);
+        event.putArray(EVENT_PROP_TEXT_TRACKS, textTracks);
+        receiveEvent(EVENT_UPDATE_SUBTITLE_AND_AUDIO, event);
     }
 
     public void onReadScteMarker() {

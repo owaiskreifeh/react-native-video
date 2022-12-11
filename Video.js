@@ -151,6 +151,12 @@ export default class Video extends Component {
     }
   };
 
+  _onUpdateSubtitle = (event) => { 
+    if(this.props.updateSubtitleAndAudio) {
+      this.props.updateSubtitleAndAudio(event.nativeEvent);
+    }
+  }
+
   _onBandwidthUpdate = (event) => {
     if (this.props.onBandwidthUpdate) {
       this.props.onBandwidthUpdate(event.nativeEvent);
@@ -344,6 +350,7 @@ export default class Video extends Component {
       onBufferEnd: this._onBufferEnd,
       onVideoError: this._onError,
       onVideoProgress: this._onProgress,
+      onUpdateSubtitleAndAudio: this._onUpdateSubtitle,
       onVideoSeek: this._onSeek,
       onVideoEnd: this._onEnd,
       onVideoBuffer: this._onBuffer,

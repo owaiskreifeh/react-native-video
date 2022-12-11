@@ -149,6 +149,7 @@ class ReactExoplayerView extends FrameLayout implements
     private int maxBitRate = 0;
     private long seekTime = C.TIME_UNSET;
     private long dashStartTime = 0;
+    private boolean updateSubtitle = false;
 
 
     private int minBufferMs = 20000;
@@ -273,6 +274,11 @@ class ReactExoplayerView extends FrameLayout implements
                     eventData.putInt("index", i);
                     adObject.started = true;
                     eventEmitter.adEvent("AdBreakStarted", eventData);
+                }
+
+                if(adObject.adEnd + 2 < pos && !updateSubtitle) {
+                    updateSubtitle = true;
+                    eventEmitter.updateSubtile(getAudioTrackInfo(),getTextTrackInfo());
                 }
 
                 // to end the AD
