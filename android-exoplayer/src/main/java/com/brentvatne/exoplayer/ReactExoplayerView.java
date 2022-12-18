@@ -231,6 +231,11 @@ class ReactExoplayerView extends FrameLayout implements
                             joinDate = new Date();
                         }
 
+                        if((int) pos / 1000 > 2 && !updateSubtitle && adsBreakPoints.size() == 0 && isDrm && !isLive) {
+                            updateSubtitle = true;
+                            eventEmitter.updateSubtile(getAudioTrackInfo(),getTextTrackInfo());
+                        }
+
                         if (adsBreakPoints != null && player.getCurrentManifest() != null && isDrm && isLive && player != null) {
                             _pos =  dashStartTime +  ((new Date().getTime() - joinDate.getTime()) / 1000);
                         } else if(adsBreakPoints != null && player.getCurrentManifest() != null && !isDrm && isLive && player != null) {
@@ -1666,15 +1671,19 @@ class ReactExoplayerView extends FrameLayout implements
             if (adsBreakPoints.size() > 0) {
                 positionMs = (long) Math.floor(getStreamTime(positionMs));
                 long seekToTime = positionMs;
+                boolean adPlayed = false;
                 for (int i = 0; i < adsBreakPoints.size(); i++) {
                     AdObject adObject = adsBreakPoints.get(i);
                     long adStartTime = adObject.adStart * 1000;
 
-                    if (positionMs >= adStartTime && !adObject.played) {
+                    if (positionMs >= adStartTime) {
                         seekToTime = adStartTime;
+                        adPlayed = adObject.played;
                     }
                 }
-                if (seekToTime != positionMs) {
+                if(adPlayed && seekToTime != positionMs) {
+                    player.seekTo(positionMs);
+                } else if (seekToTime != positionMs) {
                     snapBackTimeMs = positionMs;
                     player.seekTo(seekToTime);
                 } else {
