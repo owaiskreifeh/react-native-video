@@ -186,6 +186,7 @@ class ReactExoplayerView extends FrameLayout implements
     private Long bufferingStartTime;
     private int bufferingTime = 0;
     private Long firstWindowPosition;
+    private int currentAdPlayer = -1;
 
 
     // \ End props
@@ -231,7 +232,7 @@ class ReactExoplayerView extends FrameLayout implements
                             joinDate = new Date();
                         }
 
-                        if((int) pos / 1000 > 2 && !updateSubtitle && adsBreakPoints.size() == 0 && isDrm && !isLive) {
+                        if((int) pos / 1000 > 1 && !updateSubtitle && adsBreakPoints.size() == 0 && isDrm && !isLive) {
                             updateSubtitle = true;
                             eventEmitter.updateSubtile(getAudioTrackInfo(),getTextTrackInfo());
                         }
@@ -280,8 +281,8 @@ class ReactExoplayerView extends FrameLayout implements
                     adObject.started = true;
                     eventEmitter.adEvent("AdBreakStarted", eventData);
                 }
-
-                if(adObject.adEnd + 2 < pos && !updateSubtitle) {
+                
+                if(currentAdPlayer >= 0 && adsBreakPoints.get(currentAdPlayer).adEnd + 1 < pos && !updateSubtitle) {
                     updateSubtitle = true;
                     eventEmitter.updateSubtile(getAudioTrackInfo(),getTextTrackInfo());
                 }
@@ -306,6 +307,9 @@ class ReactExoplayerView extends FrameLayout implements
                     for (int j = 0; j < adObject.slotAds.size(); j++) {
                         AdObject subAdObject = adObject.slotAds.get(j);
                         if (subAdObject.adStart <= pos && pos < subAdObject.adEnd) {
+                            if(currentAdPlayer == -1) {
+                                currentAdPlayer = i;
+                            }
                             WritableMap eventData = Arguments.createMap();
                             eventData.putInt("adProgress", (int) Math.floor(pos - subAdObject.adStart));
                             eventData.putString("progress", (((pos - subAdObject.adStart * 1.0) / subAdObject.adDuration) * 100) + "%");
