@@ -232,7 +232,7 @@ class ReactExoplayerView extends FrameLayout implements
                             joinDate = new Date();
                         }
 
-                        if((int) pos / 1000 > 1 && !updateSubtitle && adsBreakPoints.size() == 0 && isDrm && !isLive) {
+                        if((int) pos / 1000 > 2 && !updateSubtitle && adsBreakPoints.size() == 0 && isDrm && !isLive) {
                             updateSubtitle = true;
                             eventEmitter.updateSubtile(getAudioTrackInfo(),getTextTrackInfo());
                         }
@@ -281,8 +281,8 @@ class ReactExoplayerView extends FrameLayout implements
                     adObject.started = true;
                     eventEmitter.adEvent("AdBreakStarted", eventData);
                 }
-                
-                if(currentAdPlayer >= 0 && adsBreakPoints.get(currentAdPlayer).adEnd + 1 < pos && !updateSubtitle) {
+
+                if(currentAdPlayer >= 0 && adsBreakPoints.get(currentAdPlayer).adEnd + 2 < pos && !updateSubtitle) {
                     updateSubtitle = true;
                     eventEmitter.updateSubtile(getAudioTrackInfo(),getTextTrackInfo());
                 }
@@ -293,6 +293,7 @@ class ReactExoplayerView extends FrameLayout implements
                     WritableMap eventData = Arguments.createMap();
                     eventData.putInt("index", i);
                     adObject.played = true;
+                    updateSubtitle = false;
                     eventEmitter.adEvent("AdBreakEnded", eventData);
 
                     if (snapBackTimeMs > 0 && !isLive) {
@@ -307,9 +308,7 @@ class ReactExoplayerView extends FrameLayout implements
                     for (int j = 0; j < adObject.slotAds.size(); j++) {
                         AdObject subAdObject = adObject.slotAds.get(j);
                         if (subAdObject.adStart <= pos && pos < subAdObject.adEnd) {
-                            if(currentAdPlayer == -1) {
-                                currentAdPlayer = i;
-                            }
+                            currentAdPlayer = i;
                             WritableMap eventData = Arguments.createMap();
                             eventData.putInt("adProgress", (int) Math.floor(pos - subAdObject.adStart));
                             eventData.putString("progress", (((pos - subAdObject.adStart * 1.0) / subAdObject.adDuration) * 100) + "%");
@@ -1502,7 +1501,7 @@ class ReactExoplayerView extends FrameLayout implements
         } else if (type.equals("title")) {
             for (int i = 0; i < groups.length; ++i) {
                 Format format = groups.get(i).getFormat(0);
-                if (format.id != null && format.id.equals(value.asString())) {
+                if ( format.label != null && format.id != null && format.id.equals(value.asString())) {
                     groupIndex = i;
                     break;
                 }
