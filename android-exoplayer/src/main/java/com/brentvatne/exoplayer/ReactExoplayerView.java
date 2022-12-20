@@ -202,7 +202,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     // Analytics
     private Analytics analyticsParams;
-
+    private boolean youboraJoinTimeSent = false;
     // Google DAI
 
     /**
