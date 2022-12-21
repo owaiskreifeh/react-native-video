@@ -237,13 +237,26 @@ class ReactExoplayerView extends FrameLayout implements
                             eventEmitter.updateSubtile(getAudioTrackInfo(),getTextTrackInfo());
                         }
 
-                        if (adsBreakPoints != null && player.getCurrentManifest() != null && isDrm && isLive && player != null) {
-                            _pos =  dashStartTime +  ((new Date().getTime() - joinDate.getTime()) / 1000);
-                        } else if(adsBreakPoints != null && player.getCurrentManifest() != null && !isDrm && isLive && player != null) {
-                            _pos = ((new Date().getTime() - joinDate.getTime()) / 1000) + firstWindowPosition ;
+                        if (
+                            adsBreakPoints != null &&
+                            player.getCurrentManifest() != null &&
+                            isDrm &&
+                            isLive &&
+                            player != null
+                        ) {
+                            _pos = dashStartTime + (new Date().getTime() - joinDate.getTime()) / 1000;
+                        } else if (
+                            adsBreakPoints != null &&
+                            player.getCurrentManifest() != null &&
+                            !isDrm &&
+                            isLive &&
+                            player != null
+                        ) {
+                            _pos = (new Date().getTime() - joinDate.getTime()) / 1000 + firstWindowPosition;
                         } else {
                             _pos = player.getCurrentPosition() / 1000;
                         }
+
 
                         handleSSAI(_pos);
 
@@ -269,7 +282,8 @@ class ReactExoplayerView extends FrameLayout implements
                 AdObject adObject = adsBreakPoints.get(i);
 
                 // to skip an ad if was played
-                if (adObject.adStart - 1 <= pos && pos <= adObject.adEnd && adObject.played && !isLive) {
+
+                if (adObject.adStart - 1 <= pos && pos < adObject.adEnd && adObject.played && !isLive) {
                     player.seekTo(adObject.adEnd * 1000 + 1000);
                     break;
                 }
@@ -282,9 +296,15 @@ class ReactExoplayerView extends FrameLayout implements
                     eventEmitter.adEvent("AdBreakStarted", eventData);
                 }
 
-                if(currentAdPlayer >= 0 && adsBreakPoints.get(currentAdPlayer).adEnd + 2 < pos && !updateSubtitle) {
+                if (
+                    !isLive &&
+                    isDrm &&
+                    currentAdPlayer >= 0 &&
+                    adsBreakPoints.get(currentAdPlayer).adEnd + 2 < pos &&
+                    !updateSubtitle
+                ) {
                     updateSubtitle = true;
-                    eventEmitter.updateSubtile(getAudioTrackInfo(),getTextTrackInfo());
+                    eventEmitter.updateSubtile(getAudioTrackInfo(), getTextTrackInfo());
                 }
 
                 // to end the AD
