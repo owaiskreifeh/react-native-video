@@ -232,9 +232,24 @@ class ReactExoplayerView extends FrameLayout implements
                             joinDate = new Date();
                         }
 
-                        if((int) pos / 1000 > 2 && !updateSubtitle && adsBreakPoints.size() == 0 && isDrm && !isLive) {
-                            updateSubtitle = true;
-                            eventEmitter.updateSubtile(getAudioTrackInfo(),getTextTrackInfo());
+                        long posStreamTime = getContentTime(pos);
+
+                        if(LoggingInterceptor.segmentsToSkip.size() > 0 && LoggingInterceptor.segmentsToSkip.contains((int) (posStreamTime / 1000))) {
+
+                            int segmentIndex = LoggingInterceptor.segmentsToSkip.indexOf((int) (posStreamTime / 1000));
+                            int seekToValue = LoggingInterceptor.segmentsToSkip.get(segmentIndex);
+
+                            for(int i = segmentIndex + 1; i < LoggingInterceptor.segmentsToSkip.size(); i++) {
+                                int nextSegment = LoggingInterceptor.segmentsToSkip.get(i);
+                                if(nextSegment - seekToValue == LoggingInterceptor.segmentLength) {
+                                    seekToValue = nextSegment;
+                                }
+                            }
+
+                            player.seekTo(getStreamTime((seekToValue + (LoggingInterceptor.segmentLength + 1)) * 1000));
+                            LoggingInterceptor.segmentsToSkip.clear();
+                            LoggingInterceptor.maximumRequests = 0;
+
                         }
 
                         if (
@@ -996,6 +1011,10 @@ class ReactExoplayerView extends FrameLayout implements
 //                youboraPlugin.fireInit();
 //            }
 //            currentlyInRetry = false;
+
+            LoggingInterceptor.segmentsToSkip.clear();
+            LoggingInterceptor.maximumRequests = 0;
+
             loadVideoStarted = false;
             setSelectedAudioTrack(audioTrackType, audioTrackValue);
             setSelectedVideoTrack(videoTrackType, videoTrackValue);
@@ -1711,18 +1730,40 @@ class ReactExoplayerView extends FrameLayout implements
                     }
                 }
                 if(adPlayed && seekToTime != positionMs) {
-                    player.seekTo(positionMs);
+                    player.seekTo(getNearestVaildSegment(positionMs));
                 } else if (seekToTime != positionMs) {
                     snapBackTimeMs = positionMs;
-                    player.seekTo(seekToTime);
+                    player.seekTo(getNearestVaildSegment(seekToTime));
                 } else {
-                    player.seekTo(seekToTime);
+                    player.seekTo(getNearestVaildSegment(seekToTime));
                 }
             } else {
                 seekTime = positionMs;
-                player.seekTo(positionMs);
+                player.seekTo(getNearestVaildSegment(positionMs));
             }
         }
+    }
+
+    public long getNearestVaildSegment(long positionMs) {
+
+        if(LoggingInterceptor.segmentsToSkip.size() > 0) {
+            long oldPosition = positionMs;
+            positionMs = (int) positionMs/ 1000;
+
+
+            for(int i = 0; i < LoggingInterceptor.segmentsToSkip.size(); i++) {
+                int nextSegment = LoggingInterceptor.segmentsToSkip.get(i);
+                if( positionMs <= nextSegment + LoggingInterceptor.segmentLength + 1 && positionMs >=  nextSegment) {
+                    positionMs = nextSegment;
+                }
+            }
+            if(((int) oldPosition / 1000)  == positionMs) {
+                positionMs = oldPosition;
+            } else {
+                positionMs = (positionMs + LoggingInterceptor.segmentLength + 2) * 1000;
+            }
+        }
+        return  positionMs;
     }
 
     public void seekToFromAfterCallback(long positionMs) {
