@@ -314,6 +314,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     public void setIsDrm(final ReactExoplayerView videoView, final boolean isDrm) {
         videoView.setIsDrmModifier(isDrm);
     }
+
     @ReactProp(name = PROP_IS_LIVE, defaultBoolean = false)
     public void setIsLive(final ReactExoplayerView videoView, final boolean isLive) {
         videoView.setIsLiveModifier(isLive);

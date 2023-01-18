@@ -63,7 +63,6 @@ import com.google.android.exoplayer2.source.hls.HlsManifest;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource;
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource;
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.ExoTrackSelection;
 import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
@@ -118,7 +117,7 @@ class ReactExoplayerView extends FrameLayout implements
     private ReactExoplayerView videoPlayer;
     private final VideoEventEmitter eventEmitter;
     private final ReactExoplayerConfig config;
-    private final DefaultBandwidthMeter bandwidthMeter;
+    private DefaultBandwidthMeter bandwidthMeter;
     private PlayerControlView playerControlView;
     private View playPauseControlContainer;
     private Player.EventListener eventListener;
@@ -152,8 +151,8 @@ class ReactExoplayerView extends FrameLayout implements
     private boolean updateSubtitle = false;
 
 
-    private int minBufferMs = 20000;
-    private int maxBufferMs = 20000;
+    private int minBufferMs = 18000;
+    private int maxBufferMs = 18000;
     private int bufferForPlaybackMs = DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_MS;
     private int bufferForPlaybackAfterRebufferMs = DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS;
 
@@ -205,6 +204,8 @@ class ReactExoplayerView extends FrameLayout implements
     private boolean youboraJoinTimeSent = false;
     // Google DAI
 
+    public static int qualityCounter = 1;
+    public static boolean isTrailer = true;
     /**
      * Video player callback interface that extends IMA's VideoStreamPlayerCallback by adding the
      * onSeek() callback to support ad snapback.
@@ -233,6 +234,18 @@ class ReactExoplayerView extends FrameLayout implements
                         }
 
                         long posStreamTime = getContentTime(pos);
+
+                        if (
+                            !isLive &&
+                            isDrm &&
+                            pos <= 2 &&
+                            !updateSubtitle &&
+                            adsBreakPoints != null &&
+                            adsBreakPoints.size() == 0
+                        ) {
+                            updateSubtitle = true;
+                            eventEmitter.updateSubtile(getAudioTrackInfo(), getTextTrackInfo());
+                        }
 
                         if(LoggingInterceptor.segmentsToSkip.size() > 0 && LoggingInterceptor.segmentsToSkip.contains((int) (posStreamTime / 1000))) {
 
@@ -593,7 +606,7 @@ class ReactExoplayerView extends FrameLayout implements
             public void run() {
                 try {
                     if (player == null) {
-                        ExoTrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory();
+                        ExoTrackSelection.Factory videoTrackSelectionFactory = new CustomAdaptiveTrackSelection.Factory();
                         trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
                         trackSelector.setParameters(trackSelector.buildUponParameters()
                                 .setMaxVideoBitrate(maxBitRate == 0 ? Integer.MAX_VALUE : maxBitRate));
@@ -784,6 +797,7 @@ class ReactExoplayerView extends FrameLayout implements
             player.removeMetadataOutput(this);
             trackSelector = null;
             player = null;
+            isTrailer = true;
         }
         progressHandler.removeMessages(SHOW_PROGRESS);
         themedReactContext.removeLifecycleEventListener(this);
@@ -1922,6 +1936,8 @@ class ReactExoplayerView extends FrameLayout implements
             youboraPlugin.setApplicationContext(this.getContext());
         }
 
+        isTrailer = false;
+        qualityCounter = 1;
         youboraPlugin.removeOnWillSendErrorListener(this);
         youboraPlugin.addOnWillSendErrorListener(this);
         youboraPlugin.setActivity(themedReactContext.getCurrentActivity());
