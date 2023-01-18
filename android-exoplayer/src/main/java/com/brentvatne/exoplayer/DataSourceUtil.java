@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.HttpUrl;
@@ -91,7 +92,13 @@ public class DataSourceUtil {
     }
 
     private static HttpDataSource.Factory buildHttpDataSourceFactory(ReactContext context, DefaultBandwidthMeter bandwidthMeter, Map<String, String> requestHeaders) {
-        OkHttpClient client = OkHttpClientProvider.getOkHttpClient().newBuilder().addInterceptor(new LoggingInterceptor()).build();
+        OkHttpClient client = OkHttpClientProvider.getOkHttpClient()
+                .newBuilder()
+                .addInterceptor(new LoggingInterceptor())
+                .connectTimeout(20, TimeUnit.SECONDS)
+                .readTimeout(20, TimeUnit.SECONDS)
+                .writeTimeout(20, TimeUnit.SECONDS)
+                .build();
         CookieJarContainer container = (CookieJarContainer) client.cookieJar();
         ForwardingCookieHandler handler = new ForwardingCookieHandler(context);
         container.setCookieJar(new JavaNetCookieJar(handler));
