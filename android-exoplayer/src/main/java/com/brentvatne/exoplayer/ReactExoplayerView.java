@@ -205,7 +205,7 @@ class ReactExoplayerView extends FrameLayout implements
     // Google DAI
 
     public static int qualityCounter = 1;
-    public static boolean isNotTrailer = false;
+    public static boolean isTrailer = true;
     /**
      * Video player callback interface that extends IMA's VideoStreamPlayerCallback by adding the
      * onSeek() callback to support ad snapback.
@@ -797,6 +797,7 @@ class ReactExoplayerView extends FrameLayout implements
             player.removeMetadataOutput(this);
             trackSelector = null;
             player = null;
+            isTrailer = true;
         }
         progressHandler.removeMessages(SHOW_PROGRESS);
         themedReactContext.removeLifecycleEventListener(this);
@@ -1711,11 +1712,6 @@ class ReactExoplayerView extends FrameLayout implements
         this.isDrm = isDrm;
     }
 
-    public void setIsNotTrailerModifier(boolean isNotTrailer) {
-        ReactExoplayerView.qualityCounter = 1;
-        this.isNotTrailer = isNotTrailer;
-    }
-
     public void setMutedModifier(boolean muted) {
         this.muted = muted;
         audioVolume = muted ? 0.f : 1.f;
@@ -1940,6 +1936,8 @@ class ReactExoplayerView extends FrameLayout implements
             youboraPlugin.setApplicationContext(this.getContext());
         }
 
+        isTrailer = false;
+        qualityCounter = 1;
         youboraPlugin.removeOnWillSendErrorListener(this);
         youboraPlugin.addOnWillSendErrorListener(this);
         youboraPlugin.setActivity(themedReactContext.getCurrentActivity());

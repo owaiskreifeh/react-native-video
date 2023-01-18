@@ -17,7 +17,7 @@ public class CustomAdaptiveTrackSelection extends AdaptiveTrackSelection {
 
                 long _effectiveBitrate;
 
-                if(ReactExoplayerView.qualityCounter <= 3 && ReactExoplayerView.isNotTrailer) {
+                if(ReactExoplayerView.qualityCounter <= 2 && !ReactExoplayerView.isTrailer) {
                         _effectiveBitrate = 50000;
                         ReactExoplayerView.qualityCounter++;
                 } else {

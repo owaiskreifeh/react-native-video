@@ -77,7 +77,6 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_CONTROLS = "controls";
     private static final String PROP_IS_DRM = "isDrm";
     private static final String PROP_IS_LIVE = "isLive";
-    private static final String PROP_IS_NOT_TRAILER = "notTrailer";
 
     private static final String PROP_FONT_SIZE_TRACK = "fontSizeTrack";
     private static final String PROP_PADDING_BOTTOM_TRACK = "paddingBottomTrack";
@@ -314,11 +313,6 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     @ReactProp(name = PROP_IS_DRM, defaultBoolean = false)
     public void setIsDrm(final ReactExoplayerView videoView, final boolean isDrm) {
         videoView.setIsDrmModifier(isDrm);
-    }
-
-    @ReactProp(name = PROP_IS_NOT_TRAILER, defaultBoolean = false)
-    public void setIsNotTrailer(final ReactExoplayerView videoView, final boolean isNotTrailer) {
-        videoView.setIsNotTrailerModifier(isNotTrailer);
     }
 
     @ReactProp(name = PROP_IS_LIVE, defaultBoolean = false)
