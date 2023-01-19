@@ -238,7 +238,7 @@ class ReactExoplayerView extends FrameLayout implements
                         if (
                             !isLive &&
                             isDrm &&
-                            pos <= 2 &&
+                            pos >= 2000 &&
                             !updateSubtitle &&
                             adsBreakPoints != null &&
                             adsBreakPoints.size() == 0
