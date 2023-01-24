@@ -15,6 +15,8 @@ import android.view.accessibility.CaptioningManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
+import androidx.annotation.NonNull;
+
 import com.brentvatne.react.R;
 import com.brentvatne.receiver.AudioBecomingNoisyReceiver;
 import com.brentvatne.receiver.BecomingNoisyListener;
@@ -32,6 +34,7 @@ import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.Format;
+import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -47,6 +50,7 @@ import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
 import com.google.android.exoplayer2.metadata.Metadata;
 import com.google.android.exoplayer2.metadata.MetadataOutput;
 import com.google.android.exoplayer2.source.BehindLiveWindowException;
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.MergingMediaSource;
 import com.google.android.exoplayer2.source.ProgressiveMediaSource;
@@ -75,6 +79,10 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
+import com.npaw.balancer.exoplayer.ExoPlayerCdnBalancer;
+import com.npaw.balancer.models.BalancerStats;
+import com.npaw.balancer.stats.BalancerStatsListener;
+import com.npaw.balancer.utils.BalancerOptions;
 import com.npaw.youbora.lib6.exoplayer2.Exoplayer2Adapter;
 import com.npaw.youbora.lib6.plugin.Options;
 import com.npaw.youbora.lib6.plugin.Plugin;
@@ -126,6 +134,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     private DataSource.Factory mediaDataSourceFactory;
     private SimpleExoPlayer player;
+    ExoPlayerCdnBalancer balancer;
     private DefaultTrackSelector trackSelector;
     private boolean playerNeedsSource;
 
@@ -661,13 +670,28 @@ class ReactExoplayerView extends FrameLayout implements
                         }
                         // End DRM
 
+                        balancer = new ExoPlayerCdnBalancer(
+                                "Shahid",
+                                getContext()
+                        );
+
+                        DefaultMediaSourceFactory balancerMediaSourceFactory = balancer.getMediaSourceFactory();
+
                         ArrayList<MediaSource> mediaSourceList = buildTextSources();
                         MediaSource videoSource = buildMediaSource(srcUri, extension, drmSessionManager);
                         MediaSource mediaSource;
+                        MediaItem videoMediaItem = videoSource.getMediaItem();
+
+                        if (self.drmUUID != null) {
+                            videoMediaItem = videoMediaItem.buildUpon().setDrmUuid(self.drmUUID).setDrmLicenseUri(self.drmLicenseUrl).build();
+                        }
+
+                        MediaSource balancerVideoSource = balancerMediaSourceFactory.createMediaSource(videoMediaItem);
+
                         if (mediaSourceList.size() == 0) {
-                            mediaSource = videoSource;
+                            mediaSource = balancerVideoSource;
                         } else {
-                            mediaSourceList.add(0, videoSource);
+                            mediaSourceList.add(0, balancerVideoSource);
                             MediaSource[] textSourceArray = mediaSourceList.toArray(
                                     new MediaSource[mediaSourceList.size()]
                             );
@@ -798,6 +822,7 @@ class ReactExoplayerView extends FrameLayout implements
             trackSelector = null;
             player = null;
             isTrailer = true;
+            balancer.destroy();
         }
         progressHandler.removeMessages(SHOW_PROGRESS);
         themedReactContext.removeLifecycleEventListener(this);
