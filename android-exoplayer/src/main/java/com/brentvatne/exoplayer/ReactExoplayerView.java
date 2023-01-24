@@ -15,8 +15,6 @@ import android.view.accessibility.CaptioningManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
-import androidx.annotation.NonNull;
-
 import com.brentvatne.react.R;
 import com.brentvatne.receiver.AudioBecomingNoisyReceiver;
 import com.brentvatne.receiver.BecomingNoisyListener;
@@ -80,9 +78,6 @@ import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
 import com.npaw.balancer.exoplayer.ExoPlayerCdnBalancer;
-import com.npaw.balancer.models.BalancerStats;
-import com.npaw.balancer.stats.BalancerStatsListener;
-import com.npaw.balancer.utils.BalancerOptions;
 import com.npaw.youbora.lib6.exoplayer2.Exoplayer2Adapter;
 import com.npaw.youbora.lib6.plugin.Options;
 import com.npaw.youbora.lib6.plugin.Plugin;
@@ -254,24 +249,6 @@ class ReactExoplayerView extends FrameLayout implements
                         ) {
                             updateSubtitle = true;
                             eventEmitter.updateSubtile(getAudioTrackInfo(), getTextTrackInfo());
-                        }
-
-                        if(LoggingInterceptor.segmentsToSkip.size() > 0 && LoggingInterceptor.segmentsToSkip.contains((int) (posStreamTime / 1000))) {
-
-                            int segmentIndex = LoggingInterceptor.segmentsToSkip.indexOf((int) (posStreamTime / 1000));
-                            int seekToValue = LoggingInterceptor.segmentsToSkip.get(segmentIndex);
-
-                            for(int i = segmentIndex + 1; i < LoggingInterceptor.segmentsToSkip.size(); i++) {
-                                int nextSegment = LoggingInterceptor.segmentsToSkip.get(i);
-                                if(nextSegment - seekToValue == LoggingInterceptor.segmentLength) {
-                                    seekToValue = nextSegment;
-                                }
-                            }
-
-                            player.seekTo(getStreamTime((seekToValue + (LoggingInterceptor.segmentLength + 1)) * 1000));
-                            LoggingInterceptor.segmentsToSkip.clear();
-                            LoggingInterceptor.maximumRequests = 0;
-
                         }
 
                         if (
@@ -1051,9 +1028,6 @@ class ReactExoplayerView extends FrameLayout implements
 //            }
 //            currentlyInRetry = false;
 
-            LoggingInterceptor.segmentsToSkip.clear();
-            LoggingInterceptor.maximumRequests = 0;
-
             loadVideoStarted = false;
             setSelectedAudioTrack(audioTrackType, audioTrackValue);
             setSelectedVideoTrack(videoTrackType, videoTrackValue);
@@ -1769,40 +1743,18 @@ class ReactExoplayerView extends FrameLayout implements
                     }
                 }
                 if(adPlayed && seekToTime != positionMs) {
-                    player.seekTo(getNearestVaildSegment(positionMs));
+                    player.seekTo(positionMs);
                 } else if (seekToTime != positionMs) {
                     snapBackTimeMs = positionMs;
-                    player.seekTo(getNearestVaildSegment(seekToTime));
+                    player.seekTo(seekToTime);
                 } else {
-                    player.seekTo(getNearestVaildSegment(seekToTime));
+                    player.seekTo(seekToTime);
                 }
             } else {
                 seekTime = positionMs;
-                player.seekTo(getNearestVaildSegment(positionMs));
+                player.seekTo(positionMs);
             }
         }
-    }
-
-    public long getNearestVaildSegment(long positionMs) {
-
-        if(LoggingInterceptor.segmentsToSkip.size() > 0) {
-            long oldPosition = positionMs;
-            positionMs = (int) positionMs/ 1000;
-
-
-            for(int i = 0; i < LoggingInterceptor.segmentsToSkip.size(); i++) {
-                int nextSegment = LoggingInterceptor.segmentsToSkip.get(i);
-                if( positionMs <= nextSegment + LoggingInterceptor.segmentLength + 1 && positionMs >=  nextSegment) {
-                    positionMs = nextSegment;
-                }
-            }
-            if(((int) oldPosition / 1000)  == positionMs) {
-                positionMs = oldPosition;
-            } else {
-                positionMs = (positionMs + LoggingInterceptor.segmentLength + 2) * 1000;
-            }
-        }
-        return  positionMs;
     }
 
     public void seekToFromAfterCallback(long positionMs) {
