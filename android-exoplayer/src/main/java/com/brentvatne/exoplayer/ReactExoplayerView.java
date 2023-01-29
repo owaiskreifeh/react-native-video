@@ -1303,8 +1303,7 @@ class ReactExoplayerView extends FrameLayout implements
             updateResumePosition();
         }
 
-        Throwable errorCause = e.getSourceException();
-        if( errorCause instanceof MediaCodecRenderer.DecoderInitializationException) {
+        if((Throwable) e.getSourceException() instanceof MediaCodecRenderer.DecoderInitializationException) {
             player.release();
         }
     }
