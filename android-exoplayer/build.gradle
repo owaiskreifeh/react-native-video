@@ -28,6 +28,7 @@ android {
 
 repositories {
     maven { url  "https://npaw.jfrog.io/artifactory/youbora/" }
+    maven { url  "https://npaw.jfrog.io/artifactory/release/" }
 }
 
 dependencies {
@@ -49,5 +50,6 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:${OKHTTP_VERSION}'
 
     implementation "com.nicepeopleatwork:exoplayer-adapter:6.7.23"
+    implementation "com.nicepeopleatwork:exoplayer2-13-balancer:1.2.7"
     implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.26.0'
 }

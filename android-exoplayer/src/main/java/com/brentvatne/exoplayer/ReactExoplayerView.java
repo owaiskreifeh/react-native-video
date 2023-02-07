@@ -32,6 +32,7 @@ import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.Format;
+import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -47,6 +48,7 @@ import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
 import com.google.android.exoplayer2.metadata.Metadata;
 import com.google.android.exoplayer2.metadata.MetadataOutput;
 import com.google.android.exoplayer2.source.BehindLiveWindowException;
+import com.google.android.exoplayer2.source.DefaultMediaSourceFactory;
 import com.google.android.exoplayer2.source.MediaSource;
 import com.google.android.exoplayer2.source.MergingMediaSource;
 import com.google.android.exoplayer2.source.ProgressiveMediaSource;
@@ -75,6 +77,7 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
+import com.npaw.balancer.exoplayer.ExoPlayerCdnBalancer;
 import com.npaw.youbora.lib6.exoplayer2.Exoplayer2Adapter;
 import com.npaw.youbora.lib6.plugin.Options;
 import com.npaw.youbora.lib6.plugin.Plugin;
@@ -126,6 +129,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     private DataSource.Factory mediaDataSourceFactory;
     private SimpleExoPlayer player;
+    ExoPlayerCdnBalancer balancer;
     private DefaultTrackSelector trackSelector;
     private boolean playerNeedsSource;
 
@@ -141,6 +145,7 @@ class ReactExoplayerView extends FrameLayout implements
     private boolean muted = false;
     private boolean isLive = false;
     private boolean isDrm = false;
+    private boolean enableCdnBalancer = false;
     private boolean hasAudioFocus = false;
     private float rate = 1f;
     private float audioVolume = 1f;
@@ -245,24 +250,6 @@ class ReactExoplayerView extends FrameLayout implements
                         ) {
                             updateSubtitle = true;
                             eventEmitter.updateSubtile(getAudioTrackInfo(), getTextTrackInfo());
-                        }
-
-                        if(LoggingInterceptor.segmentsToSkip.size() > 0 && LoggingInterceptor.segmentsToSkip.contains((int) (posStreamTime / 1000))) {
-
-                            int segmentIndex = LoggingInterceptor.segmentsToSkip.indexOf((int) (posStreamTime / 1000));
-                            int seekToValue = LoggingInterceptor.segmentsToSkip.get(segmentIndex);
-
-                            for(int i = segmentIndex + 1; i < LoggingInterceptor.segmentsToSkip.size(); i++) {
-                                int nextSegment = LoggingInterceptor.segmentsToSkip.get(i);
-                                if(nextSegment - seekToValue == LoggingInterceptor.segmentLength) {
-                                    seekToValue = nextSegment;
-                                }
-                            }
-
-                            player.seekTo(getStreamTime((seekToValue + (LoggingInterceptor.segmentLength + 1)) * 1000));
-                            LoggingInterceptor.segmentsToSkip.clear();
-                            LoggingInterceptor.maximumRequests = 0;
-
                         }
 
                         if (
@@ -661,13 +648,31 @@ class ReactExoplayerView extends FrameLayout implements
                         }
                         // End DRM
 
+                        balancer = new ExoPlayerCdnBalancer(
+                                "Shahid",
+                                getContext()
+                        );
+
+                        DefaultMediaSourceFactory balancerMediaSourceFactory = balancer.getMediaSourceFactory();
+
                         ArrayList<MediaSource> mediaSourceList = buildTextSources();
                         MediaSource videoSource = buildMediaSource(srcUri, extension, drmSessionManager);
                         MediaSource mediaSource;
+                        MediaItem videoMediaItem = videoSource.getMediaItem();
+                        MediaSource balancerVideoSource = null;
+
+                        if (self.drmUUID != null) {
+                            videoMediaItem = videoMediaItem.buildUpon().setDrmUuid(self.drmUUID).setDrmLicenseUri(self.drmLicenseUrl).build();
+                        }
+
+                        if(enableCdnBalancer) {
+                            balancerVideoSource = balancerMediaSourceFactory.createMediaSource(videoMediaItem);
+                        }
+
                         if (mediaSourceList.size() == 0) {
-                            mediaSource = videoSource;
+                            mediaSource = balancerVideoSource != null ? balancerVideoSource : videoSource;
                         } else {
-                            mediaSourceList.add(0, videoSource);
+                            mediaSourceList.add(0, balancerVideoSource != null ? balancerVideoSource : videoSource);
                             MediaSource[] textSourceArray = mediaSourceList.toArray(
                                     new MediaSource[mediaSourceList.size()]
                             );
@@ -798,6 +803,7 @@ class ReactExoplayerView extends FrameLayout implements
             trackSelector = null;
             player = null;
             isTrailer = true;
+            balancer.destroy();
         }
         progressHandler.removeMessages(SHOW_PROGRESS);
         themedReactContext.removeLifecycleEventListener(this);
@@ -1025,9 +1031,6 @@ class ReactExoplayerView extends FrameLayout implements
 //                youboraPlugin.fireInit();
 //            }
 //            currentlyInRetry = false;
-
-            LoggingInterceptor.segmentsToSkip.clear();
-            LoggingInterceptor.maximumRequests = 0;
 
             loadVideoStarted = false;
             setSelectedAudioTrack(audioTrackType, audioTrackValue);
@@ -1716,6 +1719,10 @@ class ReactExoplayerView extends FrameLayout implements
         this.isDrm = isDrm;
     }
 
+    public void setEnableCdnBalancerModifier(boolean enableCdnBalancer) {
+        this.enableCdnBalancer = enableCdnBalancer;
+    }
+
     public void setMutedModifier(boolean muted) {
         this.muted = muted;
         audioVolume = muted ? 0.f : 1.f;
@@ -1748,40 +1755,18 @@ class ReactExoplayerView extends FrameLayout implements
                     }
                 }
                 if(adPlayed && seekToTime != positionMs) {
-                    player.seekTo(getNearestVaildSegment(positionMs));
+                    player.seekTo(positionMs);
                 } else if (seekToTime != positionMs) {
                     snapBackTimeMs = positionMs;
-                    player.seekTo(getNearestVaildSegment(seekToTime));
+                    player.seekTo(seekToTime);
                 } else {
-                    player.seekTo(getNearestVaildSegment(seekToTime));
+                    player.seekTo(seekToTime);
                 }
             } else {
                 seekTime = positionMs;
-                player.seekTo(getNearestVaildSegment(positionMs));
+                player.seekTo(positionMs);
             }
         }
-    }
-
-    public long getNearestVaildSegment(long positionMs) {
-
-        if(LoggingInterceptor.segmentsToSkip.size() > 0) {
-            long oldPosition = positionMs;
-            positionMs = (int) positionMs/ 1000;
-
-
-            for(int i = 0; i < LoggingInterceptor.segmentsToSkip.size(); i++) {
-                int nextSegment = LoggingInterceptor.segmentsToSkip.get(i);
-                if( positionMs <= nextSegment + LoggingInterceptor.segmentLength + 1 && positionMs >=  nextSegment) {
-                    positionMs = nextSegment;
-                }
-            }
-            if(((int) oldPosition / 1000)  == positionMs) {
-                positionMs = oldPosition;
-            } else {
-                positionMs = (positionMs + LoggingInterceptor.segmentLength + 2) * 1000;
-            }
-        }
-        return  positionMs;
     }
 
     public void seekToFromAfterCallback(long positionMs) {
