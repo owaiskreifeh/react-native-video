@@ -76,6 +76,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_HIDE_SHUTTER_VIEW = "hideShutterView";
     private static final String PROP_CONTROLS = "controls";
     private static final String PROP_IS_DRM = "isDrm";
+    private static final String PROP_ENABLE_CDN_BALANCER = "enableCdnBalancer";
     private static final String PROP_IS_LIVE = "isLive";
 
     private static final String PROP_FONT_SIZE_TRACK = "fontSizeTrack";
@@ -313,6 +314,10 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     @ReactProp(name = PROP_IS_DRM, defaultBoolean = false)
     public void setIsDrm(final ReactExoplayerView videoView, final boolean isDrm) {
         videoView.setIsDrmModifier(isDrm);
+    }
+    @ReactProp(name = PROP_ENABLE_CDN_BALANCER, defaultBoolean = false)
+    public void setEnableCdnBalancer(final ReactExoplayerView videoView, final boolean enableCdnBalancer) {
+        videoView.setEnableCdnBalancerModifier(enableCdnBalancer);
     }
 
     @ReactProp(name = PROP_IS_LIVE, defaultBoolean = false)

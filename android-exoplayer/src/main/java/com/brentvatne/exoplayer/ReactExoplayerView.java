@@ -145,6 +145,7 @@ class ReactExoplayerView extends FrameLayout implements
     private boolean muted = false;
     private boolean isLive = false;
     private boolean isDrm = false;
+    private boolean enableCdnBalancer = false;
     private boolean hasAudioFocus = false;
     private float rate = 1f;
     private float audioVolume = 1f;
@@ -658,17 +659,20 @@ class ReactExoplayerView extends FrameLayout implements
                         MediaSource videoSource = buildMediaSource(srcUri, extension, drmSessionManager);
                         MediaSource mediaSource;
                         MediaItem videoMediaItem = videoSource.getMediaItem();
+                        MediaSource balancerVideoSource = null;
 
                         if (self.drmUUID != null) {
                             videoMediaItem = videoMediaItem.buildUpon().setDrmUuid(self.drmUUID).setDrmLicenseUri(self.drmLicenseUrl).build();
                         }
 
-                        MediaSource balancerVideoSource = balancerMediaSourceFactory.createMediaSource(videoMediaItem);
+                        if(enableCdnBalancer) {
+                            balancerVideoSource = balancerMediaSourceFactory.createMediaSource(videoMediaItem);
+                        }
 
                         if (mediaSourceList.size() == 0) {
-                            mediaSource = balancerVideoSource;
+                            mediaSource = balancerVideoSource != null ? balancerVideoSource : videoSource;
                         } else {
-                            mediaSourceList.add(0, balancerVideoSource);
+                            mediaSourceList.add(0, balancerVideoSource != null ? balancerVideoSource : videoSource);
                             MediaSource[] textSourceArray = mediaSourceList.toArray(
                                     new MediaSource[mediaSourceList.size()]
                             );
@@ -1709,6 +1713,10 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setIsDrmModifier(boolean isDrm) {
         this.isDrm = isDrm;
+    }
+
+    public void setEnableCdnBalancerModifier(boolean enableCdnBalancer) {
+        this.enableCdnBalancer = enableCdnBalancer;
     }
 
     public void setMutedModifier(boolean muted) {
