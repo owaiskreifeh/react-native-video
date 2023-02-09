@@ -1305,10 +1305,6 @@ class ReactExoplayerView extends FrameLayout implements
         if (!isBehindLiveWindow(e)) {
             updateResumePosition();
         }
-
-        if((Throwable) e.getSourceException() instanceof MediaCodecRenderer.DecoderInitializationException) {
-            player.release();
-        }
     }
 
     private static boolean isBehindLiveWindow(ExoPlaybackException e) {
