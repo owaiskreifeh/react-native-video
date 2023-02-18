@@ -115,17 +115,6 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_YOUBORA_USER_TYPE = "userType";
     private static final String PROP_YOUBORA_APP_NAME = "appName";
     private static final String PROP_YOUBORA_RELEASE_VERSION = "releaseVersion";
-
-    private static final String PROP_YOUBORA_CONTENT_METADATA = "contentMetadata";
-    private static final String PROP_YOUBORA_CONTENT_METADATA_GENRE = "genre";
-    private static final String PROP_YOUBORA_CONTENT_METADATA_LANGUAGE = "language";
-    private static final String PROP_YOUBORA_CONTENT_METADATA_CHANNEL = "channel";
-    private static final String PROP_YOUBORA_CONTENT_METADATA_YEAR = "year";
-    private static final String PROP_YOUBORA_CONTENT_METADATA_CAST = "cast";
-    private static final String PROP_YOUBORA_CONTENT_METADATA_DIRECTOR = "director";
-    private static final String PROP_YOUBORA_CONTENT_METADATA_OWNER = "owner";
-    private static final String PROP_YOUBORA_CONTENT_METADATA_CONTENT_ID = "content_id";
-
     private static final String PROP_LANGUAGE = "language";
 
     // analytics props
@@ -461,17 +450,6 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         String contentCustomDimension8 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_8) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_8) : null;
         String rendition = src.hasKey(PROP_YOUBORA_RENDITION) ? src.getString(PROP_YOUBORA_RENDITION) : null;
         String userType = src.hasKey(PROP_YOUBORA_USER_TYPE) ? src.getString(PROP_YOUBORA_USER_TYPE) : null;
-        Map<String, String> contentMetadata = src.hasKey(PROP_YOUBORA_CONTENT_METADATA) ? toStringMap(src.getMap(PROP_YOUBORA_CONTENT_METADATA)) : null;
-
-        Bundle metadataBundle = new Bundle();
-        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_GENRE, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_GENRE));
-        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_LANGUAGE, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_LANGUAGE));
-        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_CHANNEL, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_CHANNEL));
-        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_YEAR, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_YEAR));
-        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_CAST, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_CAST));
-        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_DIRECTOR, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_DIRECTOR));
-        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_OWNER, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_OWNER));
-        metadataBundle.putString(PROP_YOUBORA_CONTENT_METADATA_CONTENT_ID, contentMetadata.get(PROP_YOUBORA_CONTENT_METADATA_CONTENT_ID));
 
         Options youboraOptions = new Options();
 
@@ -509,8 +487,6 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         youboraOptions.setContentCustomDimension7(contentCustomDimension7);
         youboraOptions.setContentCustomDimension8(contentCustomDimension8);
         youboraOptions.setUserType(userType);
-
-        youboraOptions.setContentMetadata(metadataBundle);
 
         youboraOptions.setAppName(src.hasKey(PROP_YOUBORA_APP_NAME) ? src.getString(PROP_YOUBORA_APP_NAME) : null);
         youboraOptions.setAppReleaseVersion(src.hasKey(PROP_YOUBORA_RELEASE_VERSION) ? src.getString(PROP_YOUBORA_RELEASE_VERSION) : null);
