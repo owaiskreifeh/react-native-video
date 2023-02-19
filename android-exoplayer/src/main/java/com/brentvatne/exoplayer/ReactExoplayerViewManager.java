@@ -111,6 +111,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_6 = "contentCustomDimension6";
     private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_7 = "contentCustomDimension7";
     private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_8 = "contentCustomDimension8";
+    private static final String PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_9 = "contentCustomDimension9";
     private static final String PROP_YOUBORA_RENDITION= "rendition";
     private static final String PROP_YOUBORA_USER_TYPE = "userType";
     private static final String PROP_YOUBORA_APP_NAME = "appName";
@@ -448,6 +449,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         String contentCustomDimension6 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_6) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_6) : null;
         String contentCustomDimension7 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_7) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_7) : null;
         String contentCustomDimension8 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_8) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_8) : null;
+        String contentCustomDimension9 = src.hasKey(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_9) ? src.getString(PROP_YOUBORA_CONTENT_CUSTOM_DIMENSION_9) : null;
         String rendition = src.hasKey(PROP_YOUBORA_RENDITION) ? src.getString(PROP_YOUBORA_RENDITION) : null;
         String userType = src.hasKey(PROP_YOUBORA_USER_TYPE) ? src.getString(PROP_YOUBORA_USER_TYPE) : null;
 
@@ -486,6 +488,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         youboraOptions.setContentCustomDimension6(contentCustomDimension6);
         youboraOptions.setContentCustomDimension7(contentCustomDimension7);
         youboraOptions.setContentCustomDimension8(contentCustomDimension8);
+        youboraOptions.setContentCustomDimension9(contentCustomDimension9);
         youboraOptions.setUserType(userType);
 
         youboraOptions.setAppName(src.hasKey(PROP_YOUBORA_APP_NAME) ? src.getString(PROP_YOUBORA_APP_NAME) : null);
