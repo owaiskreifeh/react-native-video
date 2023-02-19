@@ -630,8 +630,6 @@ class ReactExoplayerView extends FrameLayout implements
                     }
                     if (playerNeedsSource && srcUri != null) {
                         exoPlayerView.invalidateAspectRatio();
-                        player.addAnalyticsListener(new EventLogger(null));
-
                         // DRM
                         DrmSessionManager drmSessionManager = null;
                         if (self.drmUUID != null) {
