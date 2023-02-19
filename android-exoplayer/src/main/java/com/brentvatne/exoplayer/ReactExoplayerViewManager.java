@@ -488,6 +488,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         youboraOptions.setContentCustomDimension6(contentCustomDimension6);
         youboraOptions.setContentCustomDimension7(contentCustomDimension7);
         youboraOptions.setContentCustomDimension8(contentCustomDimension8);
+        youboraOptions.setContentCustomDimension9(contentCustomDimension9);
         youboraOptions.setUserType(userType);
 
         youboraOptions.setAppName(src.hasKey(PROP_YOUBORA_APP_NAME) ? src.getString(PROP_YOUBORA_APP_NAME) : null);
