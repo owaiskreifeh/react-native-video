@@ -96,6 +96,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_YOUBORA_CONTENT_TYPE = "contentType";
     private static final String PROP_YOUBORA_CONTENT_ID = "contentId";
     private static final String PROP_YOUBORA_CONTENT_PLAYBACK_TYPE = "contentPlaybackType";
+    private static final String PROP_YOUBORA_CONTENT_PACKAGE = "contentPackage";
     private static final String PROP_YOUBORA_CONTENT_DURATION = "contentDuration";
     private static final String PROP_YOUBORA_CONTENT_DRM = "contentDrm";
     private static final String PROP_YOUBORA_CONTENT_RESOURCE = "contentResource";
@@ -434,6 +435,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         String contentType = src.hasKey(PROP_YOUBORA_CONTENT_TYPE) ? src.getString(PROP_YOUBORA_CONTENT_TYPE) : null;
         String contentId = src.hasKey(PROP_YOUBORA_CONTENT_ID) ? src.getString(PROP_YOUBORA_CONTENT_ID) : null;
         String contentPlaybackType = src.hasKey(PROP_YOUBORA_CONTENT_PLAYBACK_TYPE) ? src.getString(PROP_YOUBORA_CONTENT_PLAYBACK_TYPE) : null;
+        String contentPackage = src.hasKey(PROP_YOUBORA_CONTENT_PACKAGE) ? src.getString(PROP_YOUBORA_CONTENT_PACKAGE) : null;
         double contentDuration = src.hasKey(PROP_YOUBORA_CONTENT_DURATION) ? src.getDouble(PROP_YOUBORA_CONTENT_DURATION) : 0.00;
         boolean contentDrm = src.hasKey(PROP_YOUBORA_CONTENT_DRM) ? src.getBoolean(PROP_YOUBORA_CONTENT_DRM) : false;
         String contentResource = src.hasKey(PROP_YOUBORA_CONTENT_RESOURCE) ? src.getString(PROP_YOUBORA_CONTENT_RESOURCE) : null;
@@ -472,7 +474,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         youboraOptions.setContentPlaybackType(contentPlaybackType); // sVOD or aVOD
         youboraOptions.setContentDuration(contentDuration); // Duration in millis
         youboraOptions.setContentDrm(String.valueOf(contentDrm));
-
+        youboraOptions.setContentPackage(contentPackage);
         youboraOptions.setContentResource(contentResource);    // Content Url
         youboraOptions.setContentGenre(contentGenre);  // Content Genre comma separated
         youboraOptions.setContentLanguage(contentLanguage); // Content dialects comma separated
