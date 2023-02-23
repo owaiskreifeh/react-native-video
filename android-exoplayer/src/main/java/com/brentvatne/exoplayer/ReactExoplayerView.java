@@ -690,8 +690,8 @@ class ReactExoplayerView extends FrameLayout implements
                     }
 
                     // Initializing the playerControlView
-                    initializePlayerControl();
-                    setControls(controls);
+                    // initializePlayerControl();
+                    // setControls(controls);
                     applyModifiers();
                 } catch (Exception e) {
                     eventEmitter.error("initializePlayer Failed", e);
