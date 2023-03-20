@@ -801,8 +801,12 @@ class ReactExoplayerView extends FrameLayout implements
             trackSelector = null;
             player = null;
             isTrailer = true;
+        }
+
+        if(balancer != null) {
             balancer.destroy();
         }
+
         progressHandler.removeMessages(SHOW_PROGRESS);
         themedReactContext.removeLifecycleEventListener(this);
         audioBecomingNoisyReceiver.removeListener();
