@@ -416,10 +416,10 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         videoView.setHideShutterView(hideShutterView);
     }
 
-    @ReactProp(name = PROP_CONTROLS, defaultBoolean = false)
-    public void setControls(final ReactExoplayerView videoView, final boolean controls) {
-        videoView.setControls(controls);
-    }
+//    @ReactProp(name = PROP_CONTROLS, defaultBoolean = false)
+//    public void setControls(final ReactExoplayerView videoView, final boolean controls) {
+//        videoView.setControls(controls);
+//    }
 
     @ReactProp(name = PROP_FONT_SIZE_TRACK)
     public void setFontSizeTrack(final ReactExoplayerView videoView, final int fontSizeTrack) {

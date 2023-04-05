@@ -244,7 +244,8 @@ class ReactExoplayerView extends FrameLayout implements
 
     // Youbora
     private static Plugin youboraPlugin = null;
-    //    private boolean currentlyInRetry = false;
+    private boolean currentlyInRetry = false;
+    Plugin.WillSendRequestListener errorOverridedListener;
 
     // Analytics
     private Analytics analyticsParams;
@@ -291,23 +292,14 @@ class ReactExoplayerView extends FrameLayout implements
 
                         if (
                                 !isLive &&
-                                        isDrm &&
-                                        pos >= 2000 &&
-                                        !updateSubtitle &&
-                                        adsBreakPoints != null &&
-                                        adsBreakPoints.size() == 0
+                                isDrm &&
+                                pos >= 2000 &&
+                                !updateSubtitle &&
+                                adsBreakPoints != null &&
+                                adsBreakPoints.size() == 0
                         ) {
                             updateSubtitle = true;
                             eventEmitter.updateSubtile(getAudioTrackInfo(), getTextTrackInfo());
-                        }
-
-                        if (lastPos != pos
-                                || lastBufferDuration != bufferedDuration
-                                || lastDuration != duration) {
-                            lastPos = pos;
-                            lastBufferDuration = bufferedDuration;
-                            lastDuration = duration;
-                            eventEmitter.progressChanged(pos, bufferedDuration, player.getDuration(), getPositionInFirstPeriodMsForCurrentWindow(pos));
                         }
 
                         if (
@@ -338,7 +330,23 @@ class ReactExoplayerView extends FrameLayout implements
                             duration = getContentTime(duration);
                         }
 
-                        eventEmitter.progressChanged(pos, bufferedDuration, duration, getPositionInFirstPeriodMsForCurrentWindow(pos));
+                        if (
+                            lastPos != pos ||
+                            lastBufferDuration != bufferedDuration ||
+                            lastDuration != duration
+                        ) {
+                            lastPos = pos;
+                            lastBufferDuration = bufferedDuration;
+                            lastDuration = duration;
+                            eventEmitter.progressChanged(
+                                    pos,
+                                    bufferedDuration,
+                                    duration,
+                                    getPositionInFirstPeriodMsForCurrentWindow(pos)
+                            );
+                        }
+
+
                         msg = obtainMessage(SHOW_PROGRESS);
                         sendMessageDelayed(msg, Math.round(mProgressUpdateInterval));
                     }
@@ -545,75 +553,75 @@ class ReactExoplayerView extends FrameLayout implements
     /**
      * Initializing Player control
      */
-    private void initializePlayerControl() {
-        if (playerControlView == null) {
-            playerControlView = new PlayerControlView(getContext());
-        }
-
-        // Setting the player for the playerControlView
-        playerControlView.setPlayer(player);
-        playerControlView.show();
-        playPauseControlContainer = playerControlView.findViewById(R.id.exo_play_pause_container);
-
-        // Invoking onClick event for exoplayerView
-        exoPlayerView.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!isPlayingAd()) {
-                    togglePlayerControlVisibility();
-                }
-            }
-        });
-
-        //Handling the playButton click event
-        ImageButton playButton = playerControlView.findViewById(R.id.exo_play);
-        playButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (player != null && player.getPlaybackState() == Player.STATE_ENDED) {
-                    player.seekTo(0);
-                }
-                setPausedModifier(false);
-            }
-        });
-
-        //Handling the pauseButton click event
-        ImageButton pauseButton = playerControlView.findViewById(R.id.exo_pause);
-        pauseButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setPausedModifier(true);
-            }
-        });
-
-        // Invoking onPlaybackStateChanged and onPlayWhenReadyChanged events for Player
-        eventListener = new Player.Listener() {
-            @Override
-            public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
-                reLayout(playPauseControlContainer);
-                //Remove this eventListener once its executed. since UI will work fine once after the reLayout is done
-                player.removeListener(eventListener);
-            }
-        };
-        player.addListener(eventListener);
-    }
+//    private void initializePlayerControl() {
+//        if (playerControlView == null) {
+//            playerControlView = new PlayerControlView(getContext());
+//        }
+//
+//        // Setting the player for the playerControlView
+//        playerControlView.setPlayer(player);
+//        playerControlView.show();
+//        playPauseControlContainer = playerControlView.findViewById(R.id.exo_play_pause_container);
+//
+//        // Invoking onClick event for exoplayerView
+//        exoPlayerView.setOnClickListener(new OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (!isPlayingAd()) {
+//                    togglePlayerControlVisibility();
+//                }
+//            }
+//        });
+//
+//        //Handling the playButton click event
+//        ImageButton playButton = playerControlView.findViewById(R.id.exo_play);
+//        playButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (player != null && player.getPlaybackState() == Player.STATE_ENDED) {
+//                    player.seekTo(0);
+//                }
+//                setPausedModifier(false);
+//            }
+//        });
+//
+//        //Handling the pauseButton click event
+//        ImageButton pauseButton = playerControlView.findViewById(R.id.exo_pause);
+//        pauseButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                setPausedModifier(true);
+//            }
+//        });
+//
+//        // Invoking onPlaybackStateChanged and onPlayWhenReadyChanged events for Player
+//        eventListener = new Player.Listener() {
+//            @Override
+//            public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
+//                reLayout(playPauseControlContainer);
+//                //Remove this eventListener once its executed. since UI will work fine once after the reLayout is done
+//                player.removeListener(eventListener);
+//            }
+//        };
+//        player.addListener(eventListener);
+//    }
 
     /**
      * Adding Player control to the frame layout
      */
-    private void addPlayerControl() {
-        if(playerControlView == null) return;
-        LayoutParams layoutParams = new LayoutParams(
-                LayoutParams.MATCH_PARENT,
-                LayoutParams.MATCH_PARENT);
-        playerControlView.setLayoutParams(layoutParams);
-        int indexOfPC = indexOfChild(playerControlView);
-        if (indexOfPC != -1) {
-            removeViewAt(indexOfPC);
-        }
-        addView(playerControlView, 1, layoutParams);
-        reLayout(playerControlView);
-    }
+    // private void addPlayerControl() {
+    //     if(playerControlView == null) return;
+    //     LayoutParams layoutParams = new LayoutParams(
+    //             LayoutParams.MATCH_PARENT,
+    //             LayoutParams.MATCH_PARENT);
+    //     playerControlView.setLayoutParams(layoutParams);
+    //     int indexOfPC = indexOfChild(playerControlView);
+    //     if (indexOfPC != -1) {
+    //         removeViewAt(indexOfPC);
+    //     }
+    //     addView(playerControlView, 1, layoutParams);
+    //     reLayout(playerControlView);
+    // }
 
     /**
      * Update the layout
@@ -665,8 +673,7 @@ class ReactExoplayerView extends FrameLayout implements
                 return false;
             }
             if (runtime.freeMemory() == 0) {
-                Log.w("ExoPlayer Warning", "Free memory reached 0, forcing garbage collection");
-                runtime.gc();
+//                runtime.gc();
                 return false;
             }
             return super.shouldContinueLoading(playbackPositionUs, bufferedDurationUs, playbackSpeed);
@@ -864,8 +871,8 @@ class ReactExoplayerView extends FrameLayout implements
 
     private void finishPlayerInitialization() {
         // Initializing the playerControlView
-        initializePlayerControl();
-        setControls(controls);
+//        initializePlayerControl();
+//        setControls(controls);
         applyModifiers();
         startBufferCheckTimer();
     }
@@ -1008,7 +1015,9 @@ class ReactExoplayerView extends FrameLayout implements
     private void releasePlayer() {
         if (youboraPlugin != null) {
             youboraPlugin.removeAdapter();
-//            youboraPlugin.removeOnWillSendErrorListener(this);
+            if(errorOverridedListener != null) {
+                youboraPlugin.removeOnWillSendErrorListener(errorOverridedListener);
+            }
         }
 
         if (player != null) {
@@ -2348,26 +2357,28 @@ class ReactExoplayerView extends FrameLayout implements
      *
      * @param controls  Controls prop, if true enable controls, if false disable them
      */
-    public void setControls(boolean controls) {
-        this.controls = controls;
-        if (player == null || exoPlayerView == null) return;
-        if (controls) {
-            addPlayerControl();
-            // updateFullScreenButtonVisbility();
-        } else {
-            int indexOfPC = indexOfChild(playerControlView);
-            if (indexOfPC != -1) {
-                removeViewAt(indexOfPC);
-            }
-        }
-    }
+//    public void setControls(boolean controls) {
+//        this.controls = controls;
+//        if (player == null || exoPlayerView == null) return;
+//        if (controls) {
+//            addPlayerControl();
+//            // updateFullScreenButtonVisbility();
+//        } else {
+//            int indexOfPC = indexOfChild(playerControlView);
+//            if (indexOfPC != -1) {
+//                removeViewAt(indexOfPC);
+//            }
+//        }
+//    }
 
 
     public void setYouboraParams(Options youboraOptions) {
         if (youboraOptions == null) {
             if (youboraPlugin != null) {
                 youboraPlugin.removeAdapter();
-//                youboraPlugin.removeOnWillSendErrorListener(this);
+                if(errorOverridedListener != null) {
+                    youboraPlugin.removeOnWillSendErrorListener(errorOverridedListener);
+                }
                 youboraPlugin = null;
             }
             return;
@@ -2379,25 +2390,26 @@ class ReactExoplayerView extends FrameLayout implements
             youboraPlugin.setApplicationContext(this.getContext());
         }
 
+        errorOverridedListener = new Plugin.WillSendRequestListener() {
+            @Override
+            public void willSendRequest(String serviceName, Plugin plugin, Map<String, String> params) {
+                if (!currentlyInRetry){
+                    youboraPlugin.getAdapter().unregisterListeners();
+                }
+            }
+
+            @Override
+            public void willSendRequest(String serviceName, Plugin plugin, ArrayList<JSONObject> params) {
+                // do nothing for now
+            }
+        };
+
         isTrailer = false;
         qualityCounter = 1;
-//        youboraPlugin.removeOnWillSendErrorListener(this);
-//        youboraPlugin.addOnWillSendErrorListener(this);
+        youboraPlugin.removeOnWillSendErrorListener(errorOverridedListener);
+        youboraPlugin.addOnWillSendErrorListener(errorOverridedListener);
         youboraPlugin.setActivity(themedReactContext.getCurrentActivity());
     }
-
-
-//    @Override // youbora OnWillSendError Listener
-//    public void willSendRequest(String serviceName, Plugin plugin, Map<String, String> params) {
-////        if (!currentlyInRetry){
-////            youboraPlugin.getAdapter().unregisterListeners();
-////        }
-//    }
-//
-//    @Override // youbora OnWillSendError Listener (not needed)
-//    public void willSendRequest(String serviceName, Plugin plugin, ArrayList<JSONObject> params) {
-//        // do nothing
-//    }
 
     public void setExoPlayerCallback(ExoPlayerCallback callback) {
         playerCallback = callback;

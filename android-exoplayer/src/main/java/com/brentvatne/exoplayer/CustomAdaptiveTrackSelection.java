@@ -1,5 +1,7 @@
 package com.brentvatne.exoplayer;
 
+import android.util.Log;
+
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.source.TrackGroup;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
@@ -8,8 +10,10 @@ import com.google.common.collect.ImmutableList;
 
 public class CustomAdaptiveTrackSelection extends AdaptiveTrackSelection {
 
+    int tracksNumber;
     public CustomAdaptiveTrackSelection(TrackGroup group, int[] tracks, BandwidthMeter bandwidthMeter) {
         super(group, tracks, bandwidthMeter);
+        tracksNumber = tracks.length;
     }
 
     @Override
@@ -17,8 +21,8 @@ public class CustomAdaptiveTrackSelection extends AdaptiveTrackSelection {
 
         long _effectiveBitrate;
 
-        if(ReactExoplayerView.qualityCounter <= 2 && !ReactExoplayerView.isTrailer) {
-            _effectiveBitrate = 50000;
+        if(ReactExoplayerView.qualityCounter <= (tracksNumber * 2) && !ReactExoplayerView.isTrailer) {
+            _effectiveBitrate = 745040;
             ReactExoplayerView.qualityCounter++;
         } else {
             _effectiveBitrate = effectiveBitrate;
