@@ -666,14 +666,14 @@ class ReactExoplayerView extends FrameLayout implements
             }
             long usedMemory = runtime.totalMemory() - runtime.freeMemory();
             long freeMemory = runtime.maxMemory() - usedMemory;
-            long reserveMemory = (long)minBufferMemoryReservePercent * runtime.maxMemory();
+            double reserveMemory = minBufferMemoryReservePercent * runtime.maxMemory();
             long bufferedMs = bufferedDurationUs / (long)1000;
             if (reserveMemory > freeMemory && bufferedMs > 2000) {
                 // We don't have enough memory in reserve so we stop buffering to allow other components to use it instead
                 return false;
             }
-            if (runtime.freeMemory() == 0) {
-//                runtime.gc();
+            if (freeMemory == 0) {
+                runtime.gc();
                 return false;
             }
             return super.shouldContinueLoading(playbackPositionUs, bufferedDurationUs, playbackSpeed);
