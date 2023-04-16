@@ -7,7 +7,7 @@ import com.google.android.exoplayer2.upstream.LoadErrorHandlingPolicy.LoadErrorI
 import com.google.android.exoplayer2.C;
 
 public final class ReactExoplayerLoadErrorHandlingPolicy extends DefaultLoadErrorHandlingPolicy {
-    private int minLoadRetryCount = Integer.MAX_VALUE;
+    private int minLoadRetryCount = 2;
 
     public ReactExoplayerLoadErrorHandlingPolicy(int minLoadRetryCount) {
         super(minLoadRetryCount);
@@ -22,8 +22,6 @@ public final class ReactExoplayerLoadErrorHandlingPolicy extends DefaultLoadErro
         ) {
             // Capture the error we get when there is no network connectivity and keep retrying it
             return 1000; // Retry every second
-        } else if(loadErrorInfo.errorCount < this.minLoadRetryCount) {
-            return Math.min((loadErrorInfo.errorCount - 1) * 1000, 5000); // Default timeout handling
         } else {
             return C.TIME_UNSET; // Done retrying and will return the error immediately
         }
