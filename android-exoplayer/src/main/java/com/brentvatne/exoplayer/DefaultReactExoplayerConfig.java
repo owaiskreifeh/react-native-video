@@ -19,9 +19,9 @@ public class DefaultReactExoplayerConfig implements ReactExoplayerConfig {
     public LoadErrorHandlingPolicy buildLoadErrorHandlingPolicy(int minLoadRetryCount) {
         if (this.disableDisconnectError) {
             // Use custom error handling policy to prevent throwing an error when losing network connection
-            return new ReactExoplayerLoadErrorHandlingPolicy(minLoadRetryCount);
+            return new ReactExoplayerLoadErrorHandlingPolicy(2);
         }
-        return new DefaultLoadErrorHandlingPolicy(minLoadRetryCount);
+        return new DefaultLoadErrorHandlingPolicy(2);
     }
 
     public void setDisableDisconnectError(boolean disableDisconnectError) {
