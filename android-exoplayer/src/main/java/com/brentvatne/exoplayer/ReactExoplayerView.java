@@ -233,6 +233,7 @@ class ReactExoplayerView extends FrameLayout implements
     private int bufferingTime = 0;
     private Long firstWindowPosition;
     private int currentAdPlayer = -1;
+    private boolean didBehindLiveWindowHappen = false;
 
 
     // \ End props
@@ -292,11 +293,11 @@ class ReactExoplayerView extends FrameLayout implements
 
                         if (
                                 !isLive &&
-                                isDrm &&
-                                pos >= 2000 &&
-                                !updateSubtitle &&
-                                adsBreakPoints != null &&
-                                adsBreakPoints.size() == 0
+                                        isDrm &&
+                                        pos >= 2000 &&
+                                        !updateSubtitle &&
+                                        adsBreakPoints != null &&
+                                        adsBreakPoints.size() == 0
                         ) {
                             updateSubtitle = true;
                             eventEmitter.updateSubtile(getAudioTrackInfo(), getTextTrackInfo());
@@ -331,9 +332,9 @@ class ReactExoplayerView extends FrameLayout implements
                         }
 
                         if (
-                            lastPos != pos ||
-                            lastBufferDuration != bufferedDuration ||
-                            lastDuration != duration
+                                lastPos != pos ||
+                                        lastBufferDuration != bufferedDuration ||
+                                        lastDuration != duration
                         ) {
                             lastPos = pos;
                             lastBufferDuration = bufferedDuration;
@@ -1678,9 +1679,10 @@ class ReactExoplayerView extends FrameLayout implements
         }
         eventEmitter.error(errorString, e, errorCode);
         playerNeedsSource = true;
-        if (isBehindLiveWindow(e)) {
+        if (isBehindLiveWindow(e) && !didBehindLiveWindowHappen) {
             clearResumePosition();
             initializePlayer();
+            didBehindLiveWindowHappen = true;
         } else {
             updateResumePosition();
             if (needsReInitialization) {
@@ -2404,6 +2406,7 @@ class ReactExoplayerView extends FrameLayout implements
             }
         };
 
+        didBehindLiveWindowHappen = false;
         isTrailer = false;
         qualityCounter = 1;
         youboraPlugin.removeOnWillSendErrorListener(errorOverridedListener);
