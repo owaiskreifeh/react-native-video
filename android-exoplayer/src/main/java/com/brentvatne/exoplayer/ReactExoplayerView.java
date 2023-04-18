@@ -1348,6 +1348,7 @@ class ReactExoplayerView extends FrameLayout implements
             audioTrack.m_title = format.id != null ? format.id : "";
             audioTrack.m_mimeType = format.sampleMimeType;
             audioTrack.m_language = format.language != null ? format.language : "";
+            audioTrack.m_label = format.label != null ? format.label : "";
             audioTrack.m_bitrate = format.bitrate == Format.NO_VALUE ? 0 : format.bitrate;
             audioTrack.m_isSelected = isTrackSelected(selection, group, 0 );
             audioTracks.add(audioTrack);
@@ -1475,6 +1476,7 @@ class ReactExoplayerView extends FrameLayout implements
 
             Track textTrack = new Track();
             textTrack.m_index = i;
+            textTrack.m_label = format.label != null ? format.label : "";
             textTrack.m_title = format.id != null ? format.id : "";
             textTrack.m_mimeType = format.sampleMimeType;
             textTrack.m_language = format.language != null ? format.language : "";

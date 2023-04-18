@@ -205,6 +205,7 @@ class VideoEventEmitter {
                 audioTrack.putString("language", format.m_language != null ? format.m_language : "");
                 audioTrack.putInt("bitrate", format.m_bitrate);
                 audioTrack.putBoolean("selected", format.m_isSelected);
+                audioTrack.putString("label", format.m_label);
                 waAudioTracks.pushMap(audioTrack);
             }
         }
@@ -240,6 +241,7 @@ class VideoEventEmitter {
                 textTrack.putString("type", format.m_mimeType != null ? format.m_mimeType : "");
                 textTrack.putString("language", format.m_language != null ? format.m_language : "");
                 textTrack.putBoolean("selected", format.m_isSelected);
+                textTrack.putString("label", format.m_label);
                 waTextTracks.pushMap(textTrack);
             }
         }
