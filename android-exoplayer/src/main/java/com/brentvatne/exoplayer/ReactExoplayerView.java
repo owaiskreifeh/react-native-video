@@ -370,7 +370,7 @@ class ReactExoplayerView extends FrameLayout implements
                 }
 
                 // to start the AD
-                if (adObject.adStart >= pos && !adObject.started) {
+                if (adObject.adStart <= pos &&  adObject.adEnd >= pos && !adObject.started) {
                     WritableMap eventData = Arguments.createMap();
                     eventData.putInt("index", i);
                     adObject.started = true;
