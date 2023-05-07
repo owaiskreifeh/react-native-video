@@ -34,7 +34,7 @@ repositories {
 dependencies {
     implementation "com.facebook.react:react-native:${safeExtGet('reactNativeVersion', '+')}"
 
-    implementation('com.google.android.exoplayer:exoplayer:2.18.3') {
+    implementation('com.github.Lilsax.ExoPlayer:exoplayer:shahid-2.18.6') {
         exclude group: 'com.android.support'
     }
 
@@ -43,12 +43,16 @@ dependencies {
     implementation "androidx.core:core:1.1.0"
     implementation "androidx.media:media:1.1.0"
 
-    implementation('com.google.android.exoplayer:extension-okhttp:2.18.3') {
+    implementation('com.google.android.exoplayer:extension-okhttp:2.18.6') {
         exclude group: 'com.squareup.okhttp3', module: 'okhttp'
+        exclude group: 'com.google.android.exoplayer'
     }
     implementation "com.squareup.okhttp3:okhttp:" + '$OKHTTP_VERSION'
 
-    implementation 'com.nicepeopleatwork:exoplayer2-18-adapter:6.9.1'
+    implementation ('com.nicepeopleatwork:exoplayer2-18-adapter:6.9.1') {
+        exclude group: 'com.google.android.exoplayer'
+    }
+
     implementation 'com.nicepeopleatwork:exoplayer2-18-balancer-base:1.2.12'
     implementation 'com.google.ads.interactivemedia.v3:interactivemedia:3.26.0'
 }
