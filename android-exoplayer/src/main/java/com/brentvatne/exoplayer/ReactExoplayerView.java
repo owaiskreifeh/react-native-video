@@ -271,6 +271,7 @@ class ReactExoplayerView extends FrameLayout implements
     private long lastPos = -1;
     private long lastBufferDuration = -1;
     private long lastDuration = -1;
+    private int manifestType = -1;
 
     private final Handler progressHandler = new Handler(Looper.getMainLooper()) {
         @Override
@@ -921,6 +922,7 @@ class ReactExoplayerView extends FrameLayout implements
         int type = Util.inferContentType(!TextUtils.isEmpty(overrideExtension) ? "." + overrideExtension
                 : uri.getLastPathSegment());
         config.setDisableDisconnectError(this.disableDisconnectError);
+        manifestType = type;
 
         MediaItem.Builder mediaItemBuilder = new MediaItem.Builder().setUri(uri);
 
@@ -1523,7 +1525,8 @@ class ReactExoplayerView extends FrameLayout implements
     @Override
     public void onTimelineChanged(Timeline timeline, int reason) {
         Object manifest = player.getCurrentManifest();
-        if(!isDrm  && isLive && timeline != null && manifest != null) {
+        // CONTENT_TYPE_HLS = 2
+        if(manifestType == CONTENT_TYPE_HLS  && isLive && timeline != null && manifest != null) {
             HlsManifest hlsManifest = (HlsManifest) manifest;
             Timeline.Window currentWindow = timeline.getWindow(0, new Timeline.Window());
             for(int j = 0; j < hlsManifest.mediaPlaylist.tags.size(); j++) {
@@ -1537,7 +1540,9 @@ class ReactExoplayerView extends FrameLayout implements
                 }
             }
 
-        } else if (isDrm && isLive && manifest != null && timeline != null) {
+        }
+        // CONTENT_TYPE_DASH = 0
+        else if (manifestType == CONTENT_TYPE_DASH && isLive && manifest != null && timeline != null) {
             DashManifest dashManifest = (DashManifest) manifest;
             Period latestPeriod = dashManifest.getPeriod(dashManifest.getPeriodCount() - 1);
             Timeline.Window currentWindow = timeline.getWindow(0, new Timeline.Window());
@@ -2411,6 +2416,7 @@ class ReactExoplayerView extends FrameLayout implements
         didBehindLiveWindowHappen = false;
         isTrailer = false;
         qualityCounter = 1;
+        manifestType = -1;
         youboraPlugin.removeOnWillSendErrorListener(errorOverridedListener);
         youboraPlugin.addOnWillSendErrorListener(errorOverridedListener);
         youboraPlugin.setActivity(themedReactContext.getCurrentActivity());
