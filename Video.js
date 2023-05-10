@@ -80,6 +80,14 @@ export default class Video extends Component {
   save = async (options?) => {
     return await NativeModules.VideoManager.save(options, findNodeHandle(this._root));
   }
+  fireYouboraEvent = (event, dimensions) => {
+    this.setNativeProps({
+      youboraFireEvent: {
+        event,
+        dimensions,
+      },
+    })
+  }
 
   restoreUserInterfaceForPictureInPictureStopCompleted = (restored) => {
     this.setNativeProps({ restoreUserInterfaceForPIPStopCompletionHandler: restored });

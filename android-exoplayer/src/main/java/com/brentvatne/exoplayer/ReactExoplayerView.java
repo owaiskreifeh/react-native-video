@@ -39,6 +39,8 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.ThemedReactContext;
+import com.facebook.react.bridge.ReadableMapKeySetIterator;
+
 //import com.google.ads.interactivemedia.v3.api.AdEvent;
 import com.google.ads.interactivemedia.v3.api.player.VideoStreamPlayer;
 import com.google.android.exoplayer2.C;
@@ -126,6 +128,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.lang.Integer;
+import java.util.HashMap;
 
 @SuppressLint("ViewConstructor")
 class ReactExoplayerView extends FrameLayout implements
@@ -2356,6 +2359,23 @@ class ReactExoplayerView extends FrameLayout implements
         Log.d("DRM Info", "onDrmKeysRemoved");
     }
 
+    public void fireYouboraEvent(ReadableMap event) {
+        String eventName = event.hasKey("event") ? event.getString("event") : null;
+        ReadableMap dimensions = event.hasKey("dimensions") ? event.getMap("dimensions") : null;
+        if (eventName == null || dimensions == null) return;
+    
+        Map<String, String> dimMap = new HashMap<>();
+        ReadableMapKeySetIterator iterator = dimensions.keySetIterator();
+        while (iterator.hasNextKey()) {
+            String key = iterator.nextKey();
+            String value = dimensions.getString(key);
+            dimMap.put(key, value);
+        }
+    
+        if (youboraPlugin.getAdapter() != null) {
+            youboraPlugin.getAdapter().fireEvent(eventName, dimMap, new HashMap<>(), new HashMap<>());
+        }
+    }
     /**
      * Handling controls prop
      *
