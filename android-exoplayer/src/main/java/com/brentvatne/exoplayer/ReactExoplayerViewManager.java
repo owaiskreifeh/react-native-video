@@ -91,6 +91,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_FONT_SIZE_TRACK = "fontSizeTrack";
     private static final String PROP_PADDING_BOTTOM_TRACK = "paddingBottomTrack";
 
+    private static final String PROP_YOUBORA_FIRE_EVENT = "youboraFireEvent";
     private static final String PROP_YOUBORA_PARAMS = "youboraParams";
     private static final String PROP_YOUBORA_ACCOUNT_CODE = "accountCode";
     private static final String PROP_YOUBORA_USERNAME = "username";
@@ -458,6 +459,11 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
                     ? bufferConfig.getDouble(PROP_BUFFER_CONFIG_MIN_BUFFER_MEMORY_RESERVE_PERCENT) : minBufferMemoryReservePercent;
             videoView.setBufferConfig(minBufferMs, maxBufferMs, bufferForPlaybackMs, bufferForPlaybackAfterRebufferMs, maxHeapAllocationPercent, minBackBufferMemoryReservePercent, minBufferMemoryReservePercent);
         }
+    }
+
+    @ReactProp(name = PROP_YOUBORA_FIRE_EVENT)
+    public void setYouboraFireEvent(final ReactExoplayerView videoView, @Nullable ReadableMap event) {
+        videoView.fireYouboraEvent(event);
     }
 
     @ReactProp(name = PROP_YOUBORA_PARAMS)
