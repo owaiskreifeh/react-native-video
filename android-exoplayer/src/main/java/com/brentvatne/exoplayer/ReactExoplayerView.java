@@ -1607,6 +1607,7 @@ class ReactExoplayerView extends FrameLayout implements
 
         if (playbackState == Player.STATE_BUFFERING) {
             bufferingStartTime = new Date().getTime();
+            eventEmitter.onBufferStart();
         } else if( playbackState == Player.STATE_READY) {
             if (!youboraJoinTimeSent && youboraPlugin != null && youboraPlugin.getAdapter() != null) {
                 youboraPlugin.getAdapter().fireJoin();
