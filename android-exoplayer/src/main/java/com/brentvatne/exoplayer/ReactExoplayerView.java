@@ -46,6 +46,7 @@ import com.google.ads.interactivemedia.v3.api.player.VideoStreamPlayer;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
+import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.PlaybackException;
@@ -104,7 +105,11 @@ import com.npaw.balancer.exoplayer.ExoPlayerCdnBalancer;
 import com.npaw.balancer.models.BalancerStats;
 import com.npaw.balancer.stats.BalancerStatsListener;
 import com.npaw.balancer.utils.BalancerOptions;
+import com.npaw.youbora.lib6.Timer;
+import com.npaw.youbora.lib6.YouboraLog;
+import com.npaw.youbora.lib6.exoplayer2.CustomEventLogger;
 import com.npaw.youbora.lib6.exoplayer2.Exoplayer2Adapter;
+import com.npaw.youbora.lib6.exoplayer2.PlayerAnalyticsListener;
 import com.npaw.youbora.lib6.plugin.Options;
 import com.npaw.youbora.lib6.plugin.Plugin;
 
@@ -258,6 +263,8 @@ class ReactExoplayerView extends FrameLayout implements
 
     public static int qualityCounter = 1;
     public static boolean isTrailer = true;
+    public static String drmUserToken = "";
+
     /**
      * Video player callback interface that extends IMA's VideoStreamPlayerCallback by adding the
      * onSeek() callback to support ad snapback.
@@ -797,7 +804,7 @@ class ReactExoplayerView extends FrameLayout implements
         player.setPlaybackParameters(params);
 
         if (youboraPlugin != null && youboraPlugin.getAdapter() == null) {
-            youboraPlugin.setAdapter(new Exoplayer2Adapter(player));
+            youboraPlugin.setAdapter(new CustomAdapter(player));
         }
     }
 
@@ -1033,6 +1040,7 @@ class ReactExoplayerView extends FrameLayout implements
             trackSelector = null;
             player = null;
             isTrailer = true;
+            drmUserToken = "";
         }
 
         if(balancer != null) {
@@ -2192,6 +2200,10 @@ class ReactExoplayerView extends FrameLayout implements
         this.enableCdnBalancer = enableCdnBalancer;
     }
 
+    public void setPropDrmUserToken(String drmUserToken) {
+        this.drmUserToken = drmUserToken;
+    }
+
     public void setMutedModifier(boolean muted) {
         this.muted = muted;
         if (player != null) {
@@ -2436,6 +2448,7 @@ class ReactExoplayerView extends FrameLayout implements
 
         didBehindLiveWindowHappen = false;
         isTrailer = false;
+        drmUserToken = "";
         qualityCounter = 1;
         manifestType = -1;
         youboraPlugin.removeOnWillSendErrorListener(errorOverridedListener);
@@ -2477,3 +2490,161 @@ class ReactExoplayerView extends FrameLayout implements
         }
     }
 }
+
+ class CustomAdapter extends Exoplayer2Adapter {
+     private boolean skipStateChangedIdle = false;
+
+     public CustomAdapter(@NonNull ExoPlayer player) {
+        super(player);
+    }
+
+     @Override
+     public void onPlaybackStateChanged(int playbackState) {
+         String debugStr = "onPlaybackStateChanged: ";
+
+         if(playbackState == Player.STATE_IDLE) {
+             debugStr += "STATE_IDLE";
+             stateChangedIdle();
+             YouboraLog.debug(debugStr);
+         } else {
+             super.onPlaybackStateChanged(playbackState);
+         }
+     }
+
+     protected void stateChangedIdle() {
+         if (!skipStateChangedIdle) {
+             fireStop();
+         }
+
+         skipStateChangedIdle = false;
+     }
+
+
+     @Override
+     public void onPlayerError(@NonNull PlaybackException error) {
+
+             if (error instanceof PlaybackException && ((ExoPlaybackException) error).type == ExoPlaybackException.TYPE_SOURCE) {
+                 ExoPlaybackException exoPlaybackException = (ExoPlaybackException) error;
+                 String errorClass = exoPlaybackException.getSourceException().getClass().getSimpleName();
+
+                 switch (errorClass) {
+                     case "InvalidResponseCodeException":
+                         invalidResponseCodeException(error, exoPlaybackException);
+                         break;
+                     case "HttpDataSourceException":
+                         httpDataSourceException(error, exoPlaybackException);
+                         break;
+                     case "BehindLiveWindowException":
+                         fireError(String.valueOf(error.errorCode), error.getMessage(), "");
+                         break;
+                     case "DrmSessionException":
+                         handleDRMSessionExceptions(error, exoPlaybackException);
+                         break;
+                     default:
+                         fireFatalError(String.valueOf(error.errorCode), error.getMessage() + ", Error Class : " + errorClass, "");
+                         break;
+                 }
+             } else {
+                 fireFatalError(String.valueOf(error.errorCode), error.getMessage(), "");
+             }
+
+              skipStateChangedIdle = true;
+             YouboraLog.debug("onPlayerError: " + error);
+     }
+
+     private void invalidResponseCodeException(PlaybackException error, ExoPlaybackException exoPlaybackException) {
+         HttpDataSource.InvalidResponseCodeException invalidResponseCodeException =
+                 (HttpDataSource.InvalidResponseCodeException) exoPlaybackException.getSourceException();
+
+         String responseCode = invalidResponseCodeException.toString().substring(invalidResponseCodeException.toString().indexOf("Response code:"));
+         String failedURL = invalidResponseCodeException.dataSpec.uri.toString();
+
+         fireError(
+             String.valueOf(error.errorCode),
+             error.getMessage() +
+                     ", " +
+                     responseCode +
+                     ", " +
+                     invalidResponseCodeException.toString() +
+                     ", " +
+                     failedURL,
+             invalidResponseCodeException.getMessage()
+         );
+     }
+
+     private void httpDataSourceException(PlaybackException error, ExoPlaybackException exoPlaybackException) {
+         HttpDataSource.HttpDataSourceException httpDataSourceException =
+                 (HttpDataSource.HttpDataSourceException) exoPlaybackException.getSourceException();
+
+         String responseCode = httpDataSourceException.toString().substring(httpDataSourceException.toString().indexOf("Response code:"));
+         String failedURL = httpDataSourceException.dataSpec.uri.toString();
+
+
+         switch (httpDataSourceException.type) {
+             case HttpDataSource.HttpDataSourceException.TYPE_OPEN:
+                 fireFatalError(
+                     String.valueOf(error.errorCode),
+                     "OPEN - " +
+                             error.getMessage() +
+                             ", " +
+                             responseCode +
+                             ", " +
+                             httpDataSourceException.toString() +
+                             ", " +
+                             failedURL,
+                     httpDataSourceException.getMessage()
+                 );
+
+                 break;
+
+             case HttpDataSource.HttpDataSourceException.TYPE_READ:
+                 fireFatalError(
+                     String.valueOf(error.errorCode),
+                     "READ - " +
+                             error.getMessage() +
+                             ", " +
+                             responseCode +
+                             ", " +
+                             httpDataSourceException.toString() +
+                             ", " +
+                             failedURL,
+                     httpDataSourceException.getMessage()
+                 );
+
+                 break;
+
+             case HttpDataSource.HttpDataSourceException.TYPE_CLOSE:
+                 fireFatalError(
+                     String.valueOf(error.errorCode),
+                     "CLOSE - " +
+                             error.getMessage() +
+                             ", " +
+                             responseCode +
+                             ", " +
+                             httpDataSourceException.toString() +
+                             ", " +
+                             failedURL,
+                     httpDataSourceException.getMessage()
+                 );
+
+                 break;
+         }
+     }
+
+     private void handleDRMSessionExceptions(PlaybackException error, ExoPlaybackException exoPlaybackException) {
+         String sourceExceptionMessage = exoPlaybackException.getSourceException().getMessage();
+         String responseCode = sourceExceptionMessage.substring(sourceExceptionMessage.indexOf("Response code:"));
+
+         fireFatalError(
+             String.valueOf(error.errorCode),
+             error.getMessage() +
+                     ", " +
+                     responseCode +
+                     ", " +
+                     exoPlaybackException.getSourceException().getMessage() +
+                     ", HUT= " +
+                     ReactExoplayerView.drmUserToken,
+             responseCode + " ,"
+         );
+     }
+ }

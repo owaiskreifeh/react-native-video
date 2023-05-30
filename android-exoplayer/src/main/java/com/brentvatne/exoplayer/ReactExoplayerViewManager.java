@@ -86,6 +86,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_CONTROLS = "controls";
     private static final String PROP_IS_DRM = "isDrm";
     private static final String PROP_ENABLE_CDN_BALANCER = "enableCdnBalancer";
+    private static final String PROP_DRM_USER_TOKEN = "drmUserToken";
     private static final String PROP_IS_LIVE = "isLive";
 
     private static final String PROP_FONT_SIZE_TRACK = "fontSizeTrack";
@@ -322,6 +323,10 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
         videoView.setEnableCdnBalancerModifier(enableCdnBalancer);
     }
 
+    @ReactProp(name = PROP_DRM_USER_TOKEN)
+    public void setPropDrmUserToken(final ReactExoplayerView videoView, final String drmUserToken) {
+        videoView.setPropDrmUserToken(drmUserToken);
+    }
     @ReactProp(name = PROP_IS_LIVE, defaultBoolean = false)
     public void setIsLive(final ReactExoplayerView videoView, final boolean isLive) {
         videoView.setIsLiveModifier(isLive);
