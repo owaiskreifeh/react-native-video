@@ -23,12 +23,10 @@ class CustomAdapter extends Exoplayer2Adapter {
 
     @Override
     public void onPlaybackStateChanged(int playbackState) {
-        String debugStr = "onPlaybackStateChanged: ";
 
         if(playbackState == Player.STATE_IDLE) {
-            debugStr += "STATE_IDLE";
             stateChangedIdle();
-            YouboraLog.debug(debugStr);
+            YouboraLog.debug("onPlaybackStateChanged: STATE_IDLE");
         } else {
             super.onPlaybackStateChanged(playbackState);
         }
