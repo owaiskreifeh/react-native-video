@@ -1,7 +1,4 @@
 package com.brentvatne.exoplayer;
-
-import static com.brentvatne.exoplayer.ReactExoplayerView.getYouboraPlugin;
-
 import androidx.annotation.NonNull;
 import com.brentvatne.exoplayer.ReactExoplayerView;
 import com.facebook.react.bridge.ReadableMap;

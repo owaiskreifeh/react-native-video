@@ -187,7 +187,7 @@ class ReactExoplayerView extends FrameLayout implements
     private boolean muted = false;
     private boolean isLive = false;
     private boolean isDrm = false;
-
+    private boolean enableCdnBalancer = false;
     private boolean hasAudioFocus = false;
     private float rate = 1f;
     private float audioVolume = 1f;
@@ -266,7 +266,7 @@ class ReactExoplayerView extends FrameLayout implements
     public static int qualityCounter = 1;
     public static boolean isTrailer = true;
     public static String drmUserToken = "";
-    public static boolean enableCdnBalancer = false;
+
     /**
      * Video player callback interface that extends IMA's VideoStreamPlayerCallback by adding the
      * onSeek() callback to support ad snapback.
@@ -304,32 +304,13 @@ class ReactExoplayerView extends FrameLayout implements
 
                         long posStreamTime = getContentTime(pos);
 
-                        if(LoggingInterceptor.segmentsToSkip.size() > 0 && LoggingInterceptor.segmentsToSkip.contains((int) (posStreamTime / 1000))) {
-
-                            int segmentIndex = LoggingInterceptor.segmentsToSkip.indexOf((int) (posStreamTime / 1000));
-                            int seekToValue = LoggingInterceptor.segmentsToSkip.get(segmentIndex);
-
-                            for(int i = segmentIndex + 1; i < LoggingInterceptor.segmentsToSkip.size(); i++) {
-                                int nextSegment = LoggingInterceptor.segmentsToSkip.get(i);
-                                if(nextSegment - seekToValue == LoggingInterceptor.segmentLength) {
-                                    seekToValue = nextSegment;
-                                }
-                            }
-
-                            player.seekTo(getStreamTime((seekToValue + (LoggingInterceptor.segmentLength + 1)) * 1000));
-                            LoggingInterceptor.segmentsToSkip.clear();
-                            LoggingInterceptor.maximumRequests = 0;
-
-                        }
-
-
                         if (
                                 !isLive &&
-                                isDrm &&
-                                pos >= 2000 &&
-                                !updateSubtitle &&
-                                adsBreakPoints != null &&
-                                adsBreakPoints.size() == 0
+                                        isDrm &&
+                                        pos >= 2000 &&
+                                        !updateSubtitle &&
+                                        adsBreakPoints != null &&
+                                        adsBreakPoints.size() == 0
                         ) {
                             updateSubtitle = true;
                             eventEmitter.updateSubtile(getAudioTrackInfo(), getTextTrackInfo());
@@ -1312,8 +1293,7 @@ class ReactExoplayerView extends FrameLayout implements
             int width = videoFormat != null ? videoFormat.width : 0;
             int height = videoFormat != null ? videoFormat.height : 0;
             String trackId = videoFormat != null ? videoFormat.id : "-1";
-            LoggingInterceptor.segmentsToSkip.clear();
-            LoggingInterceptor.maximumRequests = 0;
+
             // Properties that must be accessed on the main thread
             long duration = player.getDuration();
             long currentPosition = player.getCurrentPosition();
@@ -2257,43 +2237,20 @@ class ReactExoplayerView extends FrameLayout implements
                     }
                 }
                 if(adPlayed && seekToTime != positionMs) {
-                    player.seekTo(getNearestVaildSegment(positionMs));
+                    player.seekTo(positionMs);
                 } else if (seekToTime != positionMs) {
                     snapBackTimeMs = positionMs;
-                    player.seekTo(getNearestVaildSegment(seekToTime));
+                    player.seekTo(seekToTime);
                 } else {
-                    player.seekTo(getNearestVaildSegment(seekToTime));
+                    player.seekTo(seekToTime);
                 }
             } else {
                 seekTime = positionMs;
-                player.seekTo(getNearestVaildSegment(positionMs));
+                player.seekTo(positionMs);
                 eventEmitter.seek(player.getCurrentPosition(), positionMs);
             }
         }
     }
-
-    public long getNearestVaildSegment(long positionMs) {
-
-        if(LoggingInterceptor.segmentsToSkip.size() > 0) {
-            long oldPosition = positionMs;
-            positionMs = (int) positionMs/ 1000;
-
-
-            for(int i = 0; i < LoggingInterceptor.segmentsToSkip.size(); i++) {
-                int nextSegment = LoggingInterceptor.segmentsToSkip.get(i);
-                if( positionMs <= nextSegment + LoggingInterceptor.segmentLength + 1 && positionMs >=  nextSegment) {
-                    positionMs = nextSegment;
-                }
-            }
-            if(((int) oldPosition / 1000)  == positionMs) {
-                positionMs = oldPosition;
-            } else {
-                positionMs = (positionMs + LoggingInterceptor.segmentLength + 2) * 1000;
-            }
-        }
-        return  positionMs;
-    }
-
 
     public void seekToFromAfterCallback(long positionMs) {
         seekTime = positionMs;
@@ -2393,7 +2350,7 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     public void setDrmLicenseUrl(String licenseUrl){
-        this.drmLicenseUrl = licenseUrl + "ASDASD";
+        this.drmLicenseUrl = licenseUrl;
     }
 
     public void setDrmLicenseHeader(String[] header){
