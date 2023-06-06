@@ -14,9 +14,17 @@ import com.google.android.exoplayer2.upstream.HttpDataSource;
 import com.google.android.exoplayer2.util.Util;
 
 import okhttp3.Call;
+import okhttp3.HttpUrl;
+import okhttp3.Interceptor;
 import okhttp3.JavaNetCookieJar;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.TimeUnit;
 
 public class DataSourceUtil {
@@ -84,12 +92,18 @@ public class DataSourceUtil {
     }
 
     private static HttpDataSource.Factory buildHttpDataSourceFactory(ReactContext context, DefaultBandwidthMeter bandwidthMeter, Map<String, String> requestHeaders) {
-        OkHttpClient client = OkHttpClientProvider.getOkHttpClient()
+        OkHttpClient.Builder builder = OkHttpClientProvider.getOkHttpClient()
                 .newBuilder()
                 .connectTimeout(20, TimeUnit.SECONDS)
                 .readTimeout(20, TimeUnit.SECONDS)
-                .writeTimeout(20, TimeUnit.SECONDS)
-                .build();
+                .writeTimeout(20, TimeUnit.SECONDS);
+
+//        if (!ReactExoplayerView.enableCdnBalancer) {
+//            builder.addInterceptor(new LoggingInterceptor());
+//        }
+
+        OkHttpClient client = builder.build();
+
         CookieJarContainer container = (CookieJarContainer) client.cookieJar();
         ForwardingCookieHandler handler = new ForwardingCookieHandler(context);
         container.setCookieJar(new JavaNetCookieJar(handler));

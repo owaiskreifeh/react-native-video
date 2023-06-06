@@ -107,11 +107,13 @@ import com.npaw.balancer.stats.BalancerStatsListener;
 import com.npaw.balancer.utils.BalancerOptions;
 import com.npaw.youbora.lib6.Timer;
 import com.npaw.youbora.lib6.YouboraLog;
+import com.npaw.youbora.lib6.YouboraUtil;
 import com.npaw.youbora.lib6.exoplayer2.CustomEventLogger;
 import com.npaw.youbora.lib6.exoplayer2.Exoplayer2Adapter;
 import com.npaw.youbora.lib6.exoplayer2.PlayerAnalyticsListener;
 import com.npaw.youbora.lib6.plugin.Options;
 import com.npaw.youbora.lib6.plugin.Plugin;
+import com.brentvatne.exoplayer.CustomAdapter;
 
 import org.json.JSONObject;
 
@@ -185,7 +187,7 @@ class ReactExoplayerView extends FrameLayout implements
     private boolean muted = false;
     private boolean isLive = false;
     private boolean isDrm = false;
-    private boolean enableCdnBalancer = false;
+
     private boolean hasAudioFocus = false;
     private float rate = 1f;
     private float audioVolume = 1f;
@@ -264,7 +266,7 @@ class ReactExoplayerView extends FrameLayout implements
     public static int qualityCounter = 1;
     public static boolean isTrailer = true;
     public static String drmUserToken = "";
-
+    public static boolean enableCdnBalancer = false;
     /**
      * Video player callback interface that extends IMA's VideoStreamPlayerCallback by adding the
      * onSeek() callback to support ad snapback.
@@ -302,13 +304,32 @@ class ReactExoplayerView extends FrameLayout implements
 
                         long posStreamTime = getContentTime(pos);
 
+                        if(LoggingInterceptor.segmentsToSkip.size() > 0 && LoggingInterceptor.segmentsToSkip.contains((int) (posStreamTime / 1000))) {
+
+                            int segmentIndex = LoggingInterceptor.segmentsToSkip.indexOf((int) (posStreamTime / 1000));
+                            int seekToValue = LoggingInterceptor.segmentsToSkip.get(segmentIndex);
+
+                            for(int i = segmentIndex + 1; i < LoggingInterceptor.segmentsToSkip.size(); i++) {
+                                int nextSegment = LoggingInterceptor.segmentsToSkip.get(i);
+                                if(nextSegment - seekToValue == LoggingInterceptor.segmentLength) {
+                                    seekToValue = nextSegment;
+                                }
+                            }
+
+                            player.seekTo(getStreamTime((seekToValue + (LoggingInterceptor.segmentLength + 1)) * 1000));
+                            LoggingInterceptor.segmentsToSkip.clear();
+                            LoggingInterceptor.maximumRequests = 0;
+
+                        }
+
+
                         if (
                                 !isLive &&
-                                        isDrm &&
-                                        pos >= 2000 &&
-                                        !updateSubtitle &&
-                                        adsBreakPoints != null &&
-                                        adsBreakPoints.size() == 0
+                                isDrm &&
+                                pos >= 2000 &&
+                                !updateSubtitle &&
+                                adsBreakPoints != null &&
+                                adsBreakPoints.size() == 0
                         ) {
                             updateSubtitle = true;
                             eventEmitter.updateSubtile(getAudioTrackInfo(), getTextTrackInfo());
@@ -1291,7 +1312,8 @@ class ReactExoplayerView extends FrameLayout implements
             int width = videoFormat != null ? videoFormat.width : 0;
             int height = videoFormat != null ? videoFormat.height : 0;
             String trackId = videoFormat != null ? videoFormat.id : "-1";
-
+            LoggingInterceptor.segmentsToSkip.clear();
+            LoggingInterceptor.maximumRequests = 0;
             // Properties that must be accessed on the main thread
             long duration = player.getDuration();
             long currentPosition = player.getCurrentPosition();
@@ -2235,20 +2257,43 @@ class ReactExoplayerView extends FrameLayout implements
                     }
                 }
                 if(adPlayed && seekToTime != positionMs) {
-                    player.seekTo(positionMs);
+                    player.seekTo(getNearestVaildSegment(positionMs));
                 } else if (seekToTime != positionMs) {
                     snapBackTimeMs = positionMs;
-                    player.seekTo(seekToTime);
+                    player.seekTo(getNearestVaildSegment(seekToTime));
                 } else {
-                    player.seekTo(seekToTime);
+                    player.seekTo(getNearestVaildSegment(seekToTime));
                 }
             } else {
                 seekTime = positionMs;
-                player.seekTo(positionMs);
+                player.seekTo(getNearestVaildSegment(positionMs));
                 eventEmitter.seek(player.getCurrentPosition(), positionMs);
             }
         }
     }
+
+    public long getNearestVaildSegment(long positionMs) {
+
+        if(LoggingInterceptor.segmentsToSkip.size() > 0) {
+            long oldPosition = positionMs;
+            positionMs = (int) positionMs/ 1000;
+
+
+            for(int i = 0; i < LoggingInterceptor.segmentsToSkip.size(); i++) {
+                int nextSegment = LoggingInterceptor.segmentsToSkip.get(i);
+                if( positionMs <= nextSegment + LoggingInterceptor.segmentLength + 1 && positionMs >=  nextSegment) {
+                    positionMs = nextSegment;
+                }
+            }
+            if(((int) oldPosition / 1000)  == positionMs) {
+                positionMs = oldPosition;
+            } else {
+                positionMs = (positionMs + LoggingInterceptor.segmentLength + 2) * 1000;
+            }
+        }
+        return  positionMs;
+    }
+
 
     public void seekToFromAfterCallback(long positionMs) {
         seekTime = positionMs;
@@ -2348,7 +2393,7 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     public void setDrmLicenseUrl(String licenseUrl){
-        this.drmLicenseUrl = licenseUrl;
+        this.drmLicenseUrl = licenseUrl + "ASDASD";
     }
 
     public void setDrmLicenseHeader(String[] header){
@@ -2489,162 +2534,7 @@ class ReactExoplayerView extends FrameLayout implements
             this.analyticsParams = new Analytics(analyticsParams);
         }
     }
+
 }
 
- class CustomAdapter extends Exoplayer2Adapter {
-     private boolean skipStateChangedIdle = false;
 
-     public CustomAdapter(@NonNull ExoPlayer player) {
-        super(player);
-    }
-
-     @Override
-     public void onPlaybackStateChanged(int playbackState) {
-         String debugStr = "onPlaybackStateChanged: ";
-
-         if(playbackState == Player.STATE_IDLE) {
-             debugStr += "STATE_IDLE";
-             stateChangedIdle();
-             YouboraLog.debug(debugStr);
-         } else {
-             super.onPlaybackStateChanged(playbackState);
-         }
-     }
-
-     protected void stateChangedIdle() {
-         if (!skipStateChangedIdle) {
-             fireStop();
-         }
-
-         skipStateChangedIdle = false;
-     }
-
-
-     @Override
-     public void onPlayerError(@NonNull PlaybackException error) {
-
-             if (error instanceof PlaybackException && ((ExoPlaybackException) error).type == ExoPlaybackException.TYPE_SOURCE) {
-                 ExoPlaybackException exoPlaybackException = (ExoPlaybackException) error;
-                 String errorClass = exoPlaybackException.getSourceException().getClass().getSimpleName();
-
-                 switch (errorClass) {
-                     case "InvalidResponseCodeException":
-                         invalidResponseCodeException(error, exoPlaybackException);
-                         break;
-                     case "HttpDataSourceException":
-                         httpDataSourceException(error, exoPlaybackException);
-                         break;
-                     case "BehindLiveWindowException":
-                         fireError(String.valueOf(error.errorCode), error.getMessage(), "");
-                         break;
-                     case "DrmSessionException":
-                         handleDRMSessionExceptions(error, exoPlaybackException);
-                         break;
-                     default:
-                         fireFatalError(String.valueOf(error.errorCode), error.getMessage() + ", Error Class : " + errorClass, "");
-                         break;
-                 }
-             } else {
-                 fireFatalError(String.valueOf(error.errorCode), error.getMessage(), "");
-             }
-
-              skipStateChangedIdle = true;
-             YouboraLog.debug("onPlayerError: " + error);
-     }
-
-     private void invalidResponseCodeException(PlaybackException error, ExoPlaybackException exoPlaybackException) {
-         HttpDataSource.InvalidResponseCodeException invalidResponseCodeException =
-                 (HttpDataSource.InvalidResponseCodeException) exoPlaybackException.getSourceException();
-
-         String responseCode = invalidResponseCodeException.toString().substring(invalidResponseCodeException.toString().indexOf("Response code:"));
-         String failedURL = invalidResponseCodeException.dataSpec.uri.toString();
-
-         fireError(
-             String.valueOf(error.errorCode),
-             error.getMessage() +
-                     ", " +
-                     responseCode +
-                     ", " +
-                     invalidResponseCodeException.toString() +
-                     ", " +
-                     failedURL,
-             invalidResponseCodeException.getMessage()
-         );
-     }
-
-     private void httpDataSourceException(PlaybackException error, ExoPlaybackException exoPlaybackException) {
-         HttpDataSource.HttpDataSourceException httpDataSourceException =
-                 (HttpDataSource.HttpDataSourceException) exoPlaybackException.getSourceException();
-
-         String responseCode = httpDataSourceException.toString().substring(httpDataSourceException.toString().indexOf("Response code:"));
-         String failedURL = httpDataSourceException.dataSpec.uri.toString();
-
-
-         switch (httpDataSourceException.type) {
-             case HttpDataSource.HttpDataSourceException.TYPE_OPEN:
-                 fireFatalError(
-                     String.valueOf(error.errorCode),
-                     "OPEN - " +
-                             error.getMessage() +
-                             ", " +
-                             responseCode +
-                             ", " +
-                             httpDataSourceException.toString() +
-                             ", " +
-                             failedURL,
-                     httpDataSourceException.getMessage()
-                 );
-
-                 break;
-
-             case HttpDataSource.HttpDataSourceException.TYPE_READ:
-                 fireFatalError(
-                     String.valueOf(error.errorCode),
-                     "READ - " +
-                             error.getMessage() +
-                             ", " +
-                             responseCode +
-                             ", " +
-                             httpDataSourceException.toString() +
-                             ", " +
-                             failedURL,
-                     httpDataSourceException.getMessage()
-                 );
-
-                 break;
-
-             case HttpDataSource.HttpDataSourceException.TYPE_CLOSE:
-                 fireFatalError(
-                     String.valueOf(error.errorCode),
-                     "CLOSE - " +
-                             error.getMessage() +
-                             ", " +
-                             responseCode +
-                             ", " +
-                             httpDataSourceException.toString() +
-                             ", " +
-                             failedURL,
-                     httpDataSourceException.getMessage()
-                 );
-
-                 break;
-         }
-     }
-
-     private void handleDRMSessionExceptions(PlaybackException error, ExoPlaybackException exoPlaybackException) {
-         String sourceExceptionMessage = exoPlaybackException.getSourceException().getMessage();
-         String responseCode = sourceExceptionMessage.substring(sourceExceptionMessage.indexOf("Response code:"));
-
-         fireFatalError(
-             String.valueOf(error.errorCode),
-             error.getMessage() +
-                     ", " +
-                     responseCode +
-                     ", " +
-                     exoPlaybackException.getSourceException().getMessage() +
-                     ", HUT= " +
-                     ReactExoplayerView.drmUserToken,
-             responseCode + " ,"
-         );
-     }
- }
