@@ -87,7 +87,7 @@ class CustomAdapter extends Exoplayer2Adapter {
         fireFatalError(
                 String.valueOf(error.errorCode),
                 error.getMessage() + ", " + invalidResponseCodeException.toString(),
-                error.getMessage()
+                failedURL
         );
     }
 
@@ -107,7 +107,7 @@ class CustomAdapter extends Exoplayer2Adapter {
                 fireFatalError(
                         String.valueOf(error.errorCode),
                         "OPEN - " + error.getMessage() + ", "+ httpDataSourceException.toString(),
-                        error.getMessage()
+                        failedURL
                 );
 
                 break;
@@ -116,7 +116,7 @@ class CustomAdapter extends Exoplayer2Adapter {
                 fireFatalError(
                         String.valueOf(error.errorCode),
                         "READ - " + error.getMessage() + ", " + httpDataSourceException.toString(),
-                        error.getMessage()
+                        failedURL
                 );
 
                 break;
@@ -125,7 +125,7 @@ class CustomAdapter extends Exoplayer2Adapter {
                 fireFatalError(
                         String.valueOf(error.errorCode),
                         "CLOSE - " + error.getMessage() + ", " + httpDataSourceException.toString(),
-                        error.getMessage()
+                        failedURL
                 );
 
                 break;
@@ -143,7 +143,7 @@ class CustomAdapter extends Exoplayer2Adapter {
         fireFatalError(
                 String.valueOf(error.errorCode),
                 sourceExceptionMessage,
-                error.getMessage()
+                ReactExoplayerView.drmUserToken
         );
     }
 }
