@@ -84,7 +84,7 @@ class CustomAdapter extends Exoplayer2Adapter {
 
         fireEvent("Failed Source", dimMap);
 
-        fireError(
+        fireFatalError(
                 String.valueOf(error.errorCode),
                 error.getMessage() + ", " + invalidResponseCodeException.toString(),
                 error.getMessage()
