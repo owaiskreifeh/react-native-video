@@ -46,6 +46,7 @@ import com.google.ads.interactivemedia.v3.api.player.VideoStreamPlayer;
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.DefaultLoadControl;
 import com.google.android.exoplayer2.DefaultRenderersFactory;
+import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.Format;
 import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.PlaybackException;
@@ -104,9 +105,15 @@ import com.npaw.balancer.exoplayer.ExoPlayerCdnBalancer;
 import com.npaw.balancer.models.BalancerStats;
 import com.npaw.balancer.stats.BalancerStatsListener;
 import com.npaw.balancer.utils.BalancerOptions;
+import com.npaw.youbora.lib6.Timer;
+import com.npaw.youbora.lib6.YouboraLog;
+import com.npaw.youbora.lib6.YouboraUtil;
+import com.npaw.youbora.lib6.exoplayer2.CustomEventLogger;
 import com.npaw.youbora.lib6.exoplayer2.Exoplayer2Adapter;
+import com.npaw.youbora.lib6.exoplayer2.PlayerAnalyticsListener;
 import com.npaw.youbora.lib6.plugin.Options;
 import com.npaw.youbora.lib6.plugin.Plugin;
+import com.brentvatne.exoplayer.CustomAdapter;
 
 import org.json.JSONObject;
 
@@ -258,6 +265,8 @@ class ReactExoplayerView extends FrameLayout implements
 
     public static int qualityCounter = 1;
     public static boolean isTrailer = true;
+    public static String drmUserToken = "";
+
     /**
      * Video player callback interface that extends IMA's VideoStreamPlayerCallback by adding the
      * onSeek() callback to support ad snapback.
@@ -274,6 +283,7 @@ class ReactExoplayerView extends FrameLayout implements
     private long lastPos = -1;
     private long lastBufferDuration = -1;
     private long lastDuration = -1;
+    private int manifestType = -1;
 
     private final Handler progressHandler = new Handler(Looper.getMainLooper()) {
         @Override
@@ -796,7 +806,7 @@ class ReactExoplayerView extends FrameLayout implements
         player.setPlaybackParameters(params);
 
         if (youboraPlugin != null && youboraPlugin.getAdapter() == null) {
-            youboraPlugin.setAdapter(new Exoplayer2Adapter(player));
+            youboraPlugin.setAdapter(new CustomAdapter(player));
         }
     }
 
@@ -924,6 +934,7 @@ class ReactExoplayerView extends FrameLayout implements
         int type = Util.inferContentType(!TextUtils.isEmpty(overrideExtension) ? "." + overrideExtension
                 : uri.getLastPathSegment());
         config.setDisableDisconnectError(this.disableDisconnectError);
+        manifestType = type;
 
         MediaItem.Builder mediaItemBuilder = new MediaItem.Builder().setUri(uri);
 
@@ -1031,6 +1042,7 @@ class ReactExoplayerView extends FrameLayout implements
             trackSelector = null;
             player = null;
             isTrailer = true;
+            drmUserToken = "";
         }
 
         if(balancer != null) {
@@ -1530,7 +1542,8 @@ class ReactExoplayerView extends FrameLayout implements
     @Override
     public void onTimelineChanged(Timeline timeline, int reason) {
         Object manifest = player.getCurrentManifest();
-        if(!isDrm  && isLive && timeline != null && manifest != null) {
+        // CONTENT_TYPE_HLS = 2
+        if(manifestType == CONTENT_TYPE_HLS  && isLive && timeline != null && manifest != null) {
             HlsManifest hlsManifest = (HlsManifest) manifest;
             Timeline.Window currentWindow = timeline.getWindow(0, new Timeline.Window());
             for(int j = 0; j < hlsManifest.mediaPlaylist.tags.size(); j++) {
@@ -1544,7 +1557,9 @@ class ReactExoplayerView extends FrameLayout implements
                 }
             }
 
-        } else if (isDrm && isLive && manifest != null && timeline != null) {
+        }
+        // CONTENT_TYPE_DASH = 0
+        else if (manifestType == CONTENT_TYPE_DASH && isLive && manifest != null && timeline != null) {
             DashManifest dashManifest = (DashManifest) manifest;
             Period latestPeriod = dashManifest.getPeriod(dashManifest.getPeriodCount() - 1);
             Timeline.Window currentWindow = timeline.getWindow(0, new Timeline.Window());
@@ -1606,6 +1621,7 @@ class ReactExoplayerView extends FrameLayout implements
 
         if (playbackState == Player.STATE_BUFFERING) {
             bufferingStartTime = new Date().getTime();
+            eventEmitter.onBufferStart();
         } else if( playbackState == Player.STATE_READY) {
             if (!youboraJoinTimeSent && youboraPlugin != null && youboraPlugin.getAdapter() != null) {
                 youboraPlugin.getAdapter().fireJoin();
@@ -2190,6 +2206,10 @@ class ReactExoplayerView extends FrameLayout implements
         this.enableCdnBalancer = enableCdnBalancer;
     }
 
+    public void setPropDrmUserToken(String drmUserToken) {
+        this.drmUserToken = drmUserToken;
+    }
+
     public void setMutedModifier(boolean muted) {
         this.muted = muted;
         if (player != null) {
@@ -2434,7 +2454,9 @@ class ReactExoplayerView extends FrameLayout implements
 
         didBehindLiveWindowHappen = false;
         isTrailer = false;
+        drmUserToken = "";
         qualityCounter = 1;
+        manifestType = -1;
         youboraPlugin.removeOnWillSendErrorListener(errorOverridedListener);
         youboraPlugin.addOnWillSendErrorListener(errorOverridedListener);
         youboraPlugin.setActivity(themedReactContext.getCurrentActivity());
@@ -2473,4 +2495,7 @@ class ReactExoplayerView extends FrameLayout implements
             this.analyticsParams = new Analytics(analyticsParams);
         }
     }
+
 }
+
+
