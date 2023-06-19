@@ -1306,9 +1306,10 @@ class ReactExoplayerView extends FrameLayout implements
 
             ArrayList<Track> audioTracks = getAudioTrackInfo();
             ArrayList<Track> textTracks  = getTextTrackInfo();
-            String youboraVersion = "";
+            final ArrayList<String> youboraVersion = new ArrayList<String>();
+            youboraVersion.add("");
             if (youboraPlugin!= null) {
-                youboraVersion = youboraPlugin.getAdapter().getVersion();
+                youboraVersion.set(0, youboraPlugin.getAdapter().getVersion());
             }
 
             if (this.contentStartTime != -1L) {
@@ -1324,7 +1325,7 @@ class ReactExoplayerView extends FrameLayout implements
                             isUsingContentResolution = true;
                         }
                         eventEmitter.load(finalDuration, finalCurrentPosition, width, height,
-                                audioTracks, textTracks, videoTracks, trackId, youboraVersion);
+                                audioTracks, textTracks, videoTracks, trackId, youboraVersion.get(0));
 
                     }
                 });
@@ -1334,7 +1335,7 @@ class ReactExoplayerView extends FrameLayout implements
             ArrayList<VideoTrack> videoTracks = getVideoTrackInfo();
 
             eventEmitter.load(duration, currentPosition, width, height,
-                    audioTracks, textTracks, videoTracks, trackId, youboraVersion);
+                    audioTracks, textTracks, videoTracks, trackId, youboraVersion.get(0));
         }
     }
     private static boolean isTrackSelected(TrackSelection selection, TrackGroup group,
