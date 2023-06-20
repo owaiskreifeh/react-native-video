@@ -1682,7 +1682,7 @@ class ReactExoplayerView extends FrameLayout implements
             return;
         }
         String errorString = "ExoPlaybackException: " + PlaybackException.getErrorCodeName(e.errorCode);
-        String errorCode = "2" + String.valueOf(e.errorCode);
+        String errorCode = String.valueOf(e.errorCode);
         boolean needsReInitialization = false;
         switch(e.errorCode) {
             case PlaybackException.ERROR_CODE_DRM_DEVICE_REVOKED:
