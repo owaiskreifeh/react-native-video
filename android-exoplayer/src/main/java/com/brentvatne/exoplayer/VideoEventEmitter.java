@@ -158,7 +158,6 @@ class VideoEventEmitter {
     private static final String EVENT_PROP_VIDEO_TRACKS = "videoTracks";
     private static final String EVENT_PROP_AUDIO_TRACKS = "audioTracks";
     private static final String EVENT_PROP_TEXT_TRACKS = "textTracks";
-    private static final String EVENT_PROP_YOUBORA_VERSION = "youboraVersion";
     private static final String EVENT_PROP_HAS_AUDIO_FOCUS = "hasAudioFocus";
     private static final String EVENT_PROP_IS_BUFFERING = "isBuffering";
     private static final String EVENT_PROP_PLAYBACK_RATE = "playbackRate";
@@ -253,17 +252,17 @@ class VideoEventEmitter {
     }
 
     public void load(double duration, double currentPosition, int videoWidth, int videoHeight,
-                     ArrayList<Track> audioTracks, ArrayList<Track> textTracks, ArrayList<VideoTrack> videoTracks, String trackId, String youboraPluginVersion){
+                     ArrayList<Track> audioTracks, ArrayList<Track> textTracks, ArrayList<VideoTrack> videoTracks, String trackId){
         WritableArray waAudioTracks = audioTracksToArray(audioTracks);
         WritableArray waVideoTracks = videoTracksToArray(videoTracks);
         WritableArray waTextTracks = textTracksToArray(textTracks);
 
-        load( duration,  currentPosition,  videoWidth,  videoHeight, waAudioTracks,  waTextTracks,  waVideoTracks, trackId, youboraPluginVersion);
+        load( duration,  currentPosition,  videoWidth,  videoHeight, waAudioTracks,  waTextTracks,  waVideoTracks, trackId);
     }
 
 
     private void load(double duration, double currentPosition, int videoWidth, int videoHeight,
-                      WritableArray audioTracks, WritableArray textTracks, WritableArray videoTracks, String trackId, String youboraPluginVersion) {
+                      WritableArray audioTracks, WritableArray textTracks, WritableArray videoTracks, String trackId) {
         WritableMap event = Arguments.createMap();
         event.putDouble(EVENT_PROP_DURATION, duration / 1000D);
         event.putDouble(EVENT_PROP_CURRENT_TIME, currentPosition / 1000D);
@@ -274,8 +273,6 @@ class VideoEventEmitter {
         event.putArray(EVENT_PROP_VIDEO_TRACKS, videoTracks);
         event.putArray(EVENT_PROP_AUDIO_TRACKS, audioTracks);
         event.putArray(EVENT_PROP_TEXT_TRACKS, textTracks);
-        event.putString(EVENT_PROP_YOUBORA_VERSION, youboraPluginVersion);
-
 
         // TODO: Actually check if you can.
         event.putBoolean(EVENT_PROP_FAST_FORWARD, true);

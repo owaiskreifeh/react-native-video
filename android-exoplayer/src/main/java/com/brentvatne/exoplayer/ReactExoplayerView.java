@@ -1306,10 +1306,6 @@ class ReactExoplayerView extends FrameLayout implements
 
             ArrayList<Track> audioTracks = getAudioTrackInfo();
             ArrayList<Track> textTracks  = getTextTrackInfo();
-            String youboraVersion = "";
-            if (youboraPlugin!= null) {
-                youboraVersion = youboraPlugin.getAdapter().getVersion();
-            }
 
             if (this.contentStartTime != -1L) {
                 ExecutorService es = Executors.newSingleThreadExecutor();
@@ -1324,7 +1320,7 @@ class ReactExoplayerView extends FrameLayout implements
                             isUsingContentResolution = true;
                         }
                         eventEmitter.load(finalDuration, finalCurrentPosition, width, height,
-                                audioTracks, textTracks, videoTracks, trackId, youboraVersion);
+                                audioTracks, textTracks, videoTracks, trackId );
 
                     }
                 });
@@ -1334,7 +1330,7 @@ class ReactExoplayerView extends FrameLayout implements
             ArrayList<VideoTrack> videoTracks = getVideoTrackInfo();
 
             eventEmitter.load(duration, currentPosition, width, height,
-                    audioTracks, textTracks, videoTracks, trackId, youboraVersion);
+                    audioTracks, textTracks, videoTracks, trackId);
         }
     }
     private static boolean isTrackSelected(TrackSelection selection, TrackGroup group,
