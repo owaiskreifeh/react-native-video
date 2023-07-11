@@ -101,7 +101,11 @@ class CustomAdapter extends Exoplayer2Adapter {
                     break;
             }
         } else {
-            fireFatalError(String.valueOf(error.errorCode), error.getMessage(), extraErrorDetails);
+            if(error.errorCode >= 4000 || error.errorCode < 5000) {
+                fireStop();
+            } else {
+                fireFatalError(String.valueOf(error.errorCode), error.getMessage(), extraErrorDetails);
+            }
         }
 
         skipStateChangedIdle = true;
