@@ -1,5 +1,4 @@
 package com.brentvatne.exoplayer;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import com.brentvatne.exoplayer.ReactExoplayerView;
