@@ -1,4 +1,6 @@
 package com.brentvatne.exoplayer;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import com.brentvatne.exoplayer.ReactExoplayerView;
 import com.facebook.react.bridge.ReadableMap;
@@ -44,8 +46,42 @@ class CustomAdapter extends Exoplayer2Adapter {
     @Override
     public void onPlayerError(@NonNull PlaybackException error) {
 
+        ExoPlaybackException exoPlaybackException = (ExoPlaybackException) error;
+        Throwable innerErrorCause = null;
+        String innerErrorMessage = "UNKNOWN INNER MESSAGE";
+        String sourceErrorCauseMessage = "UNKNOWN INNER CAUSE";
+
+        switch (exoPlaybackException.type) {
+            case ExoPlaybackException.TYPE_SOURCE:
+                innerErrorCause = exoPlaybackException.getSourceException().getCause();
+                innerErrorMessage = exoPlaybackException.getSourceException().getMessage();
+                break;
+            case ExoPlaybackException.TYPE_RENDERER:
+                innerErrorCause = exoPlaybackException.getRendererException().getCause();
+                innerErrorMessage = exoPlaybackException.getRendererException().getMessage();
+                break;
+            case ExoPlaybackException.TYPE_UNEXPECTED:
+                innerErrorCause = exoPlaybackException.getUnexpectedException().getCause();
+                innerErrorMessage = exoPlaybackException.getUnexpectedException().getMessage();
+                break;
+            case ExoPlaybackException.TYPE_REMOTE:
+                innerErrorCause = exoPlaybackException.getCause();
+                innerErrorMessage = exoPlaybackException.getMessage();
+                break;
+        }
+
+        if (innerErrorCause != null) {
+            sourceErrorCauseMessage = innerErrorCause.toString();
+        }
+        
+        String extraErrorDetails = String.format("Message: %s | Cause: %s", innerErrorMessage, sourceErrorCauseMessage);
+
+        Map<String, String> customErrorEventMap = new HashMap<String, String>();
+        customErrorEventMap.put("details", extraErrorDetails);
+
+        fireEvent("CUSTOM_PLAYER_ERROR", customErrorEventMap);
+
         if (error instanceof PlaybackException && ((ExoPlaybackException) error).type == ExoPlaybackException.TYPE_SOURCE) {
-            ExoPlaybackException exoPlaybackException = (ExoPlaybackException) error;
             String errorClass = exoPlaybackException.getSourceException().getClass().getSimpleName();
 
             switch (errorClass) {
@@ -62,11 +98,11 @@ class CustomAdapter extends Exoplayer2Adapter {
                     handleDRMSessionExceptions(error, exoPlaybackException);
                     break;
                 default:
-                    fireFatalError(String.valueOf(error.errorCode), error.getMessage() + ", Error Class : " + errorClass, "");
+                    fireFatalError(String.valueOf(error.errorCode), error.getMessage() + ", Error Class : " + errorClass, extraErrorDetails);
                     break;
             }
         } else {
-            fireFatalError(String.valueOf(error.errorCode), error.getMessage(), "");
+            fireFatalError(String.valueOf(error.errorCode), error.getMessage(), extraErrorDetails);
         }
 
         skipStateChangedIdle = true;
