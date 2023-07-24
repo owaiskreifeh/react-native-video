@@ -175,7 +175,6 @@ class ReactExoplayerView extends FrameLayout implements
     private DefaultTrackSelector trackSelector;
     private boolean playerNeedsSource;
 
-
     private long snapBackTimeMs;
     private int resumeWindow;
     private long resumePosition;
@@ -262,6 +261,8 @@ class ReactExoplayerView extends FrameLayout implements
     private Analytics analyticsParams;
     private boolean youboraJoinTimeSent = false;
     // Google DAI
+
+    public int errorRetries = 0;
 
     public static int qualityCounter = 1;
     public static boolean isTrailer = true;
@@ -806,7 +807,7 @@ class ReactExoplayerView extends FrameLayout implements
         player.setPlaybackParameters(params);
 
         if (youboraPlugin != null && youboraPlugin.getAdapter() == null) {
-            youboraPlugin.setAdapter(new CustomAdapter(player));
+            youboraPlugin.setAdapter(new CustomAdapter(player, this));
         }
     }
 

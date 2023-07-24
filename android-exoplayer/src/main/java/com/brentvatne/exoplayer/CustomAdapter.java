@@ -16,10 +16,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 class CustomAdapter extends Exoplayer2Adapter {
+    private static final String TAG = "CustomAdapterYoubora";
     private boolean skipStateChangedIdle = false;
-
-    public CustomAdapter(@NonNull ExoPlayer player) {
+    private ReactExoplayerView view;
+    public CustomAdapter(@NonNull ExoPlayer player, ReactExoplayerView view) {
         super(player);
+        this.view = view;
     }
 
     @Override
@@ -50,6 +52,11 @@ class CustomAdapter extends Exoplayer2Adapter {
         String innerErrorMessage = "UNKNOWN INNER MESSAGE";
         String sourceErrorCauseMessage = "UNKNOWN INNER CAUSE";
 
+        if(view.errorRetries < 1 && error.errorCode >= 3000 && error.errorCode < 4000) {
+            view.errorRetries++;
+            fireStop();
+            return;
+        }
         switch (exoPlaybackException.type) {
             case ExoPlaybackException.TYPE_SOURCE:
                 innerErrorCause = exoPlaybackException.getSourceException().getCause();
@@ -101,7 +108,7 @@ class CustomAdapter extends Exoplayer2Adapter {
                     break;
             }
         } else {
-            if(error.errorCode >= 4000 || error.errorCode < 5000) {
+            if(error.errorCode >= 4000 && error.errorCode < 5000) {
                 fireStop();
             } else {
                 fireFatalError(String.valueOf(error.errorCode), error.getMessage(), extraErrorDetails);

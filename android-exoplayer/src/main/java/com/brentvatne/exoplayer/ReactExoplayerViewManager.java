@@ -88,6 +88,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_ENABLE_CDN_BALANCER = "enableCdnBalancer";
     private static final String PROP_DRM_USER_TOKEN = "drmUserToken";
     private static final String PROP_IS_LIVE = "isLive";
+    private static final String PROP_ERROR_RETRIES = "playerRetries";
 
     private static final String PROP_FONT_SIZE_TRACK = "fontSizeTrack";
     private static final String PROP_PADDING_BOTTOM_TRACK = "paddingBottomTrack";
@@ -330,6 +331,11 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     @ReactProp(name = PROP_IS_LIVE, defaultBoolean = false)
     public void setIsLive(final ReactExoplayerView videoView, final boolean isLive) {
         videoView.setIsLiveModifier(isLive);
+    }
+
+    @ReactProp(name = PROP_ERROR_RETRIES)
+    public void setErrorRetries(final ReactExoplayerView videoView, final int errorRetries) {
+        videoView.errorRetries = errorRetries;
     }
 
     @ReactProp(name = PROP_MUTED, defaultBoolean = false)
