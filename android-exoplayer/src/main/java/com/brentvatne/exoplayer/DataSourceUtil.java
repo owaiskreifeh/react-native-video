@@ -2,6 +2,7 @@ package com.brentvatne.exoplayer;
 
 import android.util.Log;
 
+import com.brentvatne.common.ExoUserConfig;
 import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.modules.network.CookieJarContainer;
 import com.facebook.react.modules.network.ForwardingCookieHandler;
@@ -84,12 +85,19 @@ public class DataSourceUtil {
     }
 
     private static HttpDataSource.Factory buildHttpDataSourceFactory(ReactContext context, DefaultBandwidthMeter bandwidthMeter, Map<String, String> requestHeaders) {
+
+        long timeout = 30000;
+        if (ExoUserConfig.currentConfig.requestTimeout > 0) {
+            timeout = (long) ExoUserConfig.currentConfig.requestTimeout;
+        }
+
         OkHttpClient client = OkHttpClientProvider.getOkHttpClient()
                 .newBuilder()
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(30, TimeUnit.SECONDS)
+                .connectTimeout(timeout, TimeUnit.MILLISECONDS)
+                .readTimeout(timeout, TimeUnit.MILLISECONDS)
+                .writeTimeout(timeout, TimeUnit.MILLISECONDS)
                 .build();
+
         CookieJarContainer container = (CookieJarContainer) client.cookieJar();
         ForwardingCookieHandler handler = new ForwardingCookieHandler(context);
         container.setCookieJar(new JavaNetCookieJar(handler));

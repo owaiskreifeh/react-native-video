@@ -1,9 +1,8 @@
 package com.brentvatne.exoplayer;
 
 import androidx.annotation.NonNull;
-import com.brentvatne.exoplayer.ReactExoplayerView;
-import com.facebook.react.bridge.ReadableMap;
-import com.facebook.react.bridge.ReadableMapKeySetIterator;
+
+import com.brentvatne.common.ExoUserConfig;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.PlaybackException;
@@ -16,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 class CustomAdapter extends Exoplayer2Adapter {
-    private static final String TAG = "CustomAdapterYoubora";
+    private static final String TAG = "CustomAdapterYouboraExo";
     private boolean skipStateChangedIdle = false;
     private ReactExoplayerView view;
     public CustomAdapter(@NonNull ExoPlayer player, ReactExoplayerView view) {
@@ -48,15 +47,21 @@ class CustomAdapter extends Exoplayer2Adapter {
     public void onPlayerError(@NonNull PlaybackException error) {
 
         ExoPlaybackException exoPlaybackException = (ExoPlaybackException) error;
+        ExoUserConfig exoUserConfig = ExoUserConfig.currentConfig;
+
         Throwable innerErrorCause = null;
         String innerErrorMessage = "UNKNOWN INNER MESSAGE";
         String sourceErrorCauseMessage = "UNKNOWN INNER CAUSE";
 
-        if(view.errorRetries < 1 && error.errorCode >= 3000 && error.errorCode < 4000) {
+        if(
+            view.errorRetries < exoUserConfig.maxRetries &&
+            exoUserConfig.isHandledError(error.errorCode)
+        ) {
             view.errorRetries++;
             fireStop();
             return;
         }
+
         switch (exoPlaybackException.type) {
             case ExoPlaybackException.TYPE_SOURCE:
                 innerErrorCause = exoPlaybackException.getSourceException().getCause();

@@ -26,6 +26,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 import androidx.activity.OnBackPressedCallback;
 
+import com.brentvatne.common.ExoUserConfig;
 import com.brentvatne.common.Track;
 import com.brentvatne.common.VideoTrack;
 import com.brentvatne.react.R;
@@ -166,6 +167,8 @@ class ReactExoplayerView extends FrameLayout implements
     private PlayerControlView playerControlView;
     private View playPauseControlContainer;
     private Player.Listener eventListener;
+
+    private ExoUserConfig userPlayerConfig;
 
     private ExoPlayerView exoPlayerView;
 
@@ -472,6 +475,10 @@ class ReactExoplayerView extends FrameLayout implements
         eventEmitter.setViewId(id);
     }
 
+    public void setUserPlayerConfig(ExoUserConfig config) {
+        this.userPlayerConfig = config;
+    }
+
     private void createViews() {
         clearResumePosition();
         mediaDataSourceFactory = buildDataSourceFactory(true);
@@ -762,7 +769,7 @@ class ReactExoplayerView extends FrameLayout implements
                     eventEmitter.error(ex.toString(), ex, "1001");
                 }
             }
-        }, 1);
+        }, errorRetries > 0 ? userPlayerConfig.retryDelay : 1);
 
     }
 

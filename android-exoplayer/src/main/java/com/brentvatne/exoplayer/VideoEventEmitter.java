@@ -3,6 +3,7 @@ package com.brentvatne.exoplayer;
 import androidx.annotation.StringDef;
 import android.view.View;
 
+import com.brentvatne.common.ExoUserConfig;
 import com.brentvatne.common.Track;
 import com.brentvatne.common.VideoTrack;
 import com.facebook.react.bridge.Arguments;
@@ -10,6 +11,7 @@ import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.events.RCTEventEmitter;
+import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.metadata.Metadata;
 import com.google.android.exoplayer2.metadata.emsg.EventMessage;
 import com.google.android.exoplayer2.metadata.id3.Id3Frame;
@@ -167,6 +169,7 @@ class VideoEventEmitter {
     private static final String EVENT_PROP_ERROR_EXCEPTION = "errorException";
     private static final String EVENT_PROP_ERROR_TRACE = "errorStackTrace";
     private static final String EVENT_PROP_ERROR_CODE = "errorCode";
+    private static final String EVENT_PROP_ERROR_RECOVERABLE = "errorRecoverable";
 
     private static final String EVENT_PROP_TIMED_METADATA = "metadata";
 
@@ -386,11 +389,16 @@ class VideoEventEmitter {
         exception.printStackTrace(pw);
         String stackTrace = sw.toString();
 
+        boolean isRecoverable = exception instanceof ExoPlaybackException &&
+                ExoUserConfig.currentConfig.isHandledError(Integer.parseInt(errorCode));
+
         WritableMap error = Arguments.createMap();
         error.putString(EVENT_PROP_ERROR_STRING, errorString);
         error.putString(EVENT_PROP_ERROR_EXCEPTION, exception.toString());
         error.putString(EVENT_PROP_ERROR_CODE, errorCode);
         error.putString(EVENT_PROP_ERROR_TRACE, stackTrace);
+        //EVENT_PROP_ERROR_RECOVERABLE
+        error.putBoolean(EVENT_PROP_ERROR_RECOVERABLE, isRecoverable);
         WritableMap event = Arguments.createMap();
         event.putMap(EVENT_PROP_ERROR, error);
         receiveEvent(EVENT_ERROR, event);

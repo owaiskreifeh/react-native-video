@@ -7,6 +7,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 
+import com.brentvatne.common.ExoUserConfig;
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
@@ -92,6 +93,8 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
 
     private static final String PROP_FONT_SIZE_TRACK = "fontSizeTrack";
     private static final String PROP_PADDING_BOTTOM_TRACK = "paddingBottomTrack";
+
+    private static final String PROP_EXO_CONFIG = "exoConfig";
 
     private static final String PROP_YOUBORA_FIRE_EVENT = "youboraFireEvent";
     private static final String PROP_YOUBORA_PARAMS = "youboraParams";
@@ -441,6 +444,13 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     @ReactProp(name = PROP_PADDING_BOTTOM_TRACK, defaultFloat = 0f)
     public void setPaddingBottomTrack(final ReactExoplayerView videoView, final float paddingBottomTrack) {
         videoView.setPaddingBottomTrack(paddingBottomTrack);
+    }
+
+    @ReactProp(name = PROP_EXO_CONFIG)
+    public void setExoConfig(final ReactExoplayerView view, @Nullable ReadableMap exoConfig) {
+        if (exoConfig != null) {
+            view.setUserPlayerConfig(ExoUserConfig.createFromReadableMap(exoConfig, true));
+        }
     }
 
     @ReactProp(name = PROP_BUFFER_CONFIG)
